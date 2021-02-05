@@ -18,13 +18,11 @@ class Simulation:
     def __init__(self, sim_name):
         self.proj_dir = glb.proj_path
         self.sim_name = sim_name
-        self.sim_dir = "/".join(glb.simulations_path, self.sim_name)
-        self.param_file = "/".join(glb.parfiles_path, self.sim_name + ".par")
-        self.metadata = (
-            self.proj_dir + "/simulations/" + self.sim_name + "/TwoPunctures.bbh"
-        )
+        self.sim_dir = f"{glb.simulations_path}/{self.sim_name}"
+        self.param_file = f"{glb.parfiles_path}/{self.sim_name}.par"
+        self.metadata = f"{self.proj_dir}/simulations/{self.sim_name}/TwoPunctures.bbh"
 
-        self.figure_dir = self.proj_dir + "/results/figures"
+        self.figure_dir = f"{self.proj_dir}/results/figures"
 
         self.base_name = "_".join(self.sim_dir.split("_")[1:])
         (
@@ -218,7 +216,7 @@ class Simulation:
         else:
             raise TypeError(
                 "Invalid choice of parameter\
-            in find max"
+                in find max"
             )
 
         ind = np.unravel_index(np.nanargmax(var, axis=None), var.shape)

@@ -169,10 +169,10 @@ def submit(simulation):
     vanilla_base_name, excision_base_name = create_base_names(simulation)
 
     # Create parameter files
-    vanilla_parfile = p.Parameter_File(simulation, vanilla_base_name, 3)
+    vanilla_parfile = p.Parameter_File(simulation, vanilla_base_name, 1)
     vanilla_parfile.write_parfile()
 
-    excision_parfile = p.Parameter_File(simulation, excision_base_name, 3)
+    excision_parfile = p.Parameter_File(simulation, excision_base_name, 1)
     excision_parfile.write_parfile()
 
     # Create submition files

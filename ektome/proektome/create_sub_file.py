@@ -59,7 +59,7 @@ def create_sub_dict(base_name):
         "accounting_group": "cbc.prod.initial_data",
         "request_cpus": "Target.TotalSlotCPUs",
         "getenv": "True",
-        "request_memory": "Target.TotalSlotMemory",
+        "request_memory": 18000,
         "Rank": "Memory",
         "on_exit_hold": "( ExitCode != 0 )",
         "kill_sig": "15",

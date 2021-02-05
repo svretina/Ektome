@@ -41,5 +41,5 @@ def error_analysis():
     error_data = pd.read_csv(results_dir + "/error_data.csv", header=0)
 
     # ????--------------------- v ----- check this
-    pm.plot_error_curve_momentum(error_data, "momentum")
+    # pm.plot_error_curve_momentum(error_data)
     pm.plot_error_curve_separation(error_data, "momentum")

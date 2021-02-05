@@ -259,7 +259,7 @@ if __name__ == "__main__":
     config_dict = read_config()
     config_arr = create_config_arrays(config_dict)
     # Create output directories
-    create_dirs(proj_path)
+    create_dirs(glb.proj_path)
     # Create simulation dictionary and submit it
     create_simulation_dict_and_submit(config_arr)
 

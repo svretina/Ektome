@@ -359,7 +359,7 @@ IOHDF5::out2D_vars              = "
 # TimerReport::n_top_timers               = 20
 """
 
-    def __init__(self, simulation, base_name, N):
+    def __init__(self, simulation, base_name, N=0):
         self.q = simulation["q"]
         self.N = N
         self.base_name = base_name
@@ -445,6 +445,7 @@ IOHDF5::out2D_vars              = "
             (center1, center2), outer_boundary=self.outer_boundary
         )
         grid_synced = pg.set_dt_max_grid(grid_not_synced, dt_max=1)
+        print(grid_synced.parfile_code)
         self.grid_section = grid_synced.parfile_code
 
     def _calculate_outer_boundary(self):
