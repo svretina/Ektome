@@ -21,10 +21,7 @@ class Simulation:
         self.sim_dir = "/".join(glb.simulations_path, self.sim_name)
         self.param_file = "/".join(glb.parfiles_path, self.sim_name + ".par")
         self.metadata = (
-            self.proj_dir
-            + "/simulations/"
-            + self.sim_name
-            + "/TwoPunctures.bbh"
+            self.proj_dir + "/simulations/" + self.sim_name + "/TwoPunctures.bbh"
         )
 
         self.figure_dir = self.proj_dir + "/results/figures"
@@ -90,6 +87,7 @@ class Simulation:
         self.umax_ind, self.umax = self.find_max("puncture_u")
         self.psimax_ind, self.psimax = self.find_max("my_psi")
 
+    @staticmethod
     def get_line(self, string, fl):
         file = open(fl, "r")
         for line in file:
@@ -99,6 +97,7 @@ class Simulation:
         file.close()
         return tmp
 
+    @staticmethod
     def get_nvalue(self, line):
         val = line.split("=")[1]
         return float(val)
@@ -199,9 +198,7 @@ class Simulation:
         var1d = var.ravel()
         N = x1d.shape[0]
         for i in range(N):
-            circle = (x1d[i] + self.par_b) * (x1d[i] + self.par_b) + y1d[
-                i
-            ] * y1d[i]
+            circle = (x1d[i] + self.par_b) * (x1d[i] + self.par_b) + y1d[i] * y1d[i]
 
             if circle < (radius * radius):
                 var1d[i] = np.nan
@@ -239,22 +236,19 @@ class Simulation:
         xs = []
         ys = []
         for i in range(N):
-            circle = (x1d[i] + self.par_b) * (x1d[i] + self.par_b) + y1d[
-                i
-            ] * y1d[i]
+            circle = (x1d[i] + self.par_b) * (x1d[i] + self.par_b) + y1d[i] * y1d[i]
             if circle == (self.ex_r * self.ex_r):
                 psis.append(var1d[i])
                 xs.append(x1d[i])
                 ys.append(y1d[i])
 
-        if self.ex_r != 0 and hist == True:
+        if self.ex_r != 0 and hist:
             plt.clf()
             plt.tick_params(direction="in")
             bns = int(np.sqrt(len(psis)))
             plt.hist(psis, bins=len(psis), density=True)
             plt.title(r"$\psi$ at excision sphere")
             plt.savefig("%s-hist.png" % self.sim_dir)
-
         return xs, ys, psis
 
     def plot_u_xy(self):
@@ -270,9 +264,7 @@ class Simulation:
             vmax=abs(self.umesh).max(),
         )
         # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-        plt.scatter(
-            [-self.par_b, self.par_b], [0, 0], color="black", marker="x"
-        )
+        plt.scatter([-self.par_b, self.par_b], [0, 0], color="black", marker="x")
         excision_sphere = plt.Circle(
             (-self.par_b, 0), self.ex_r, color="black", fill=False, ls="--"
         )
@@ -281,9 +273,7 @@ class Simulation:
             (-self.par_b, 0), self.mm / 2, color="black", fill=False
         )
 
-        rs_radius2 = plt.Circle(
-            (self.par_b, 0), self.mp / 2, color="black", fill=False
-        )
+        rs_radius2 = plt.Circle((self.par_b, 0), self.mp / 2, color="black", fill=False)
 
         xs, ys, psis = self.psi_value_at_excision()
         plt.scatter(xs, ys, color="green", marker="+")
@@ -312,9 +302,7 @@ class Simulation:
             vmax=abs(self.psimesh).max(),
         )
         # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-        plt.scatter(
-            [-self.par_b, self.par_b], [0, 0], color="black", marker="x"
-        )
+        plt.scatter([-self.par_b, self.par_b], [0, 0], color="black", marker="x")
         excision_sphere = plt.Circle(
             (-self.par_b, 0), self.ex_r, color="black", fill=False, ls="--"
         )
@@ -323,9 +311,7 @@ class Simulation:
             (-self.par_b, 0), self.mm / 2, color="black", fill=False
         )
 
-        rs_radius2 = plt.Circle(
-            (self.par_b, 0), self.mp / 2, color="black", fill=False
-        )
+        rs_radius2 = plt.Circle((self.par_b, 0), self.mp / 2, color="black", fill=False)
 
         plt.gcf().gca().add_artist(excision_sphere)
         plt.gcf().gca().add_artist(rs_radius1)

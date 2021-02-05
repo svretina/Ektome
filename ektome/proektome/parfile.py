@@ -419,9 +419,7 @@ IOHDF5::out2D_vars              = "
 
     def _calculate_parfile_content(self):
         """Calculates the content of the parameter file"""
-        self.parfile_content = Template(Parameter_File._lines).substitute(
-            self.__dict__
-        )
+        self.parfile_content = Template(Parameter_File._lines).substitute(self.__dict__)
 
     def _calculate_grid_section(self):
         """Calculates the grid section, taking into account
@@ -466,8 +464,7 @@ IOHDF5::out2D_vars              = "
             self.EH_plus * 2 ** level for level in range(self.N_plus + self.N)
         )
         self.rr_minus = tuple(
-            self.EH_minus * 2 ** level
-            for level in range(self.N_minus + self.N)
+            self.EH_minus * 2 ** level for level in range(self.N_minus + self.N)
         )
 
     def _calculate_N_before_overlap(self, d=0):
@@ -477,8 +474,7 @@ IOHDF5::out2D_vars              = "
         """
         n_plus = (
             np.log2(
-                (2 * self.par_b - d)
-                / (self.m_plus + self.m_minus * 2 ** self.factor)
+                (2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor)
             )
             + 1
         )

@@ -155,9 +155,7 @@ class Error:
         plt.gcf().gca().add_artist(rs_radius1)
         plt.gcf().gca().add_artist(rs_radius2)
 
-        plt.scatter(
-            [self.x_at_umax], [self.y_at_umax], color="green", marker="+"
-        )
+        plt.scatter([self.x_at_umax], [self.y_at_umax], color="green", marker="+")
 
         plt.xlim(self.vanilla.xmin, self.vanilla.xmax)
         plt.ylim(self.vanilla.ymin, self.vanilla.ymax)
@@ -213,9 +211,7 @@ class Error:
         plt.gcf().gca().add_artist(rs_radius1)
         plt.gcf().gca().add_artist(rs_radius2)
 
-        plt.scatter(
-            [self.x_at_psimax], [self.y_at_psimax], color="red", marker="+"
-        )
+        plt.scatter([self.x_at_psimax], [self.y_at_psimax], color="red", marker="+")
 
         plt.xlim(self.vanilla.xmin, self.vanilla.xmax)
         plt.ylim(self.vanilla.ymin, self.vanilla.ymax)

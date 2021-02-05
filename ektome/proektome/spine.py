@@ -131,9 +131,7 @@ def create_config_arrays(cfg_dict):
         try:
             if "array" in cfg_dict[section].keys():
                 temp_array = cfg_dict[section]["array"].split(",")
-                config_array[section] = np.array(
-                    [float(x) for x in temp_array]
-                )
+                config_array[section] = np.array([float(x) for x in temp_array])
             else:
                 start = float(cfg_dict[section]["start"])
                 end = float(cfg_dict[section]["end"])
@@ -174,9 +172,7 @@ def create_simulation_dict_and_submit(cfg_arr):
                                     for sx2 in cfg_arr["minus_spin_x"]:
                                         for sy2 in cfg_arr["minus_spin_y"]:
                                             for sz2 in cfg_arr["minus_spin_z"]:
-                                                for pz2 in cfg_arr[
-                                                    "minus_momentum_z"
-                                                ]:
+                                                for pz2 in cfg_arr["minus_momentum_z"]:
                                                     for py2 in cfg_arr[
                                                         "minus_momentum_y"
                                                     ]:
@@ -185,32 +181,25 @@ def create_simulation_dict_and_submit(cfg_arr):
                                                         ]:
                                                             max_r = q / 2.0
                                                             if not math.isnan(
-                                                                cfg_arr[
-                                                                    "excision"
-                                                                ]
+                                                                cfg_arr["excision"]
                                                             ):
                                                                 step = float(
-                                                                    cfg[
-                                                                        "excision"
-                                                                    ]["step"]
+                                                                    cfg["excision"][
+                                                                        "step"
+                                                                    ]
                                                                 )
                                                                 radii = np.arange(
                                                                     glb.min_r,
-                                                                    max_r
-                                                                    + step,
+                                                                    max_r + step,
                                                                     step,
                                                                 )
                                                             else:
                                                                 radii = [max_r]
                                                             for ex_r in radii:
                                                                 if math.isnan(
-                                                                    cfg_arr[
-                                                                        "error"
-                                                                    ]
+                                                                    cfg_arr["error"]
                                                                 ):
-                                                                    simulation[
-                                                                        "q"
-                                                                    ] = q
+                                                                    simulation["q"] = q
                                                                     simulation[
                                                                         "par_b"
                                                                     ] = b
@@ -257,10 +246,9 @@ def create_simulation_dict_and_submit(cfg_arr):
                                                                     submit_simulation(
                                                                         simulation
                                                                     )
-                                                                    exit()
+                                                                    sys.exit()
                                                                     counter = (
-                                                                        counter
-                                                                        + 1
+                                                                        counter + 1
                                                                     )
 
 

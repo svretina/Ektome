@@ -2,9 +2,12 @@
 
 import pandas as pd
 import numpy as np
-import os
+import os, sys
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as mpe
+import matplotlib as mpl
 
+import seaborn as sns
 import ektome.globals as glb
 import ektome.metektome.osteo as o
 
@@ -20,10 +23,6 @@ def get_fig_size(width=7, scale=1.0):
     fig_size = width * base_size
     return fig_size
 
-
-import matplotlib.patheffects as mpe
-import matplotlib as mpl
-import seaborn as sns
 
 sns.set_context("paper")
 sns.set_style(style="whitegrid", rc=None)
@@ -114,9 +113,7 @@ def plot_error_u_xy(error_obj):
     plt.gcf().gca().add_artist(rs_radius1)
     plt.gcf().gca().add_artist(rs_radius2)
 
-    plt.scatter(
-        [error_obj.x_at_umax], [error_obj.y_at_umax], color="green", marker="+"
-    )
+    plt.scatter([error_obj.x_at_umax], [error_obj.y_at_umax], color="green", marker="+")
 
     plt.xlim(error_obj.vanilla.xmin, error_obj.vanilla.xmax)
     plt.ylim(error_obj.vanilla.ymin, error_obj.vanilla.ymax)
@@ -215,9 +212,7 @@ def plot_u_xy(sim_obj):
         vmax=abs(sim_obj.umesh).max(),
     )
     # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-    plt.scatter(
-        [-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x"
-    )
+    plt.scatter([-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x")
     excision_sphere = plt.Circle(
         (-sim_obj.par_b, 0), sim_obj.ex_r, color="black", fill=False, ls="--"
     )
@@ -261,9 +256,7 @@ def plot_psi_xy(sim_obj):
         vmax=abs(sim_obj.psimesh).max(),
     )
     # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-    plt.scatter(
-        [-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x"
-    )
+    plt.scatter([-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x")
     excision_sphere = plt.Circle(
         (-sim_obj.par_b, 0), sim_obj.ex_r, color="black", fill=False, ls="--"
     )
@@ -354,7 +347,7 @@ def plot_error_curve_separation(error_dict, mode):
                          $p_2$={state[1]}",
             )
     else:
-        exit()
+        sys.exit()
 
     q = frame["q"].values[0]
     theoretical = q / (4.0 * b - q)
