@@ -180,7 +180,7 @@ def create_simulation_dict_and_submit(cfg_arr):
                                                             for ex_r in radii:
                                                                 if math.isnan(cfg_arr["error"]):
                                                                     simulation["q"] = q
-                                                                    simulation["b"] = b
+                                                                    simulation["par_b"] = b
                                                                     simulation["px1"] = px1
                                                                     simulation["py1"] = py1
                                                                     simulation["pz1"] = pz1

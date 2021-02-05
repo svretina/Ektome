@@ -31,8 +31,8 @@ import time
 import numpy as np
 import htcondor as htc
 import ektome.globals as glb
-import ektome.proektome.create_par_file as cpf
 import ektome.proektome.create_sub_file as csf
+import ektome.proektome.parfile
 
 def create_base_names(simulation):
     """Creates a name which serves as a base to name various
@@ -162,11 +162,18 @@ def submit(simulation):
     if (p1 > 1) or (p2 > 1):
         print("Momentum > 1")
         return 1
+
     vanilla_base_name, excision_base_name = create_base_names(simulation)
 
+
     # Create parameter files
-    cpf.create_par_file(simulation, vanilla_base_name)
-    cpf.create_par_file(simulation, excision_base_name)
+    vanilla_parfile = parfile.Parameter_File(simulation, vanilla_base_name, 3)
+    vanilla_parfile.write_parfile()
+
+    excision_parfile = parfile.Parameter_File(simulation, excision_base_name, 3)
+    excision_parfile.write_parfile()
+
+
     # Create submition files
     vnl_sub = csf.create_sub_dict(simulation, vanilla_base_name)
     exc_sub = csf.create_sub_dict(simulation, excision_base_name)

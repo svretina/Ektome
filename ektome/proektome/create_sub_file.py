@@ -35,18 +35,17 @@ def create_sub_dict(simulation, base_name):
     :returns: A Dictionary with the submition info
     :rtype: dict
     """
-    #  Add a variable to control memory usage
-    #  Add a variable to control cpu number
+
     par_file_path = "/".join((glb.parfiles_path, base_name + ".par"))
     # How much memory to request
-    if simulation["b"] == 50:
-        memory = "15000MB"
-    elif simulation["b"] == 55:
-        memory = "20000MB"
-    elif simulation["b"] == 60:
-        memory = "25000MB"
-    else:
-        memory = "10000MB"
+    # if simulation["par_b"] == 50:
+    #     memory = "15000MB"
+    # elif simulation["par_b"] == 55:
+    #     memory = "20000MB"
+    # elif simulation["par_b"] == 60:
+    #     memory = "25000MB"
+    # else:
+    #     memory = "10000MB"
 
     sim_dir = "/".join((glb.simulations_path, base_name))
     sub_file_dict = {

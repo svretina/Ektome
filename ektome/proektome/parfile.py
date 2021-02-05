@@ -16,20 +16,13 @@
 # this program; if not, see <https://www.gnu.org/licenses/>.
 
 
-"""This module provides helper functions to write parameter files.
-The functions available are:
-- :py:func:`~.get_parameter_dict`: Returns a Parameters dictionary from the Simulation dictionary.
-- :py:func:`~.create_par_file`: Writes a parameter file.
-"""
-
-import numpy as np
 from string import Template
 from precactus import grid as pg
-
+import numpy as np
 import ektome.globals as glb
 
-
-lines = """
+class Parameter_File:
+    _lines = """
 Cactus::cctk_run_title = "QC-0"
 Cactus::cctk_full_warnings         = yes
 Cactus::highlight_warning_messages = no
@@ -72,10 +65,8 @@ Carpet::verbose           = no
 Carpet::veryverbose       = no
 Carpet::schedule_barriers = no
 Carpet::storage_verbose   = no
-#Carpet::timers_verbose    = no
 CarpetLib::output_bboxes  = no
 
-Carpet::domain_from_coordbase = yes
 # Carpet::max_refinement_levels = 10
 
 driver::ghost_size       = 3
@@ -96,8 +87,8 @@ Carpet::output_timers_every      = 5120
 CarpetLib::print_timestats_every = 5120
 CarpetLib::print_memstats_every  = 5120
 
-ActiveThorns = "NaNChecker"
 
+ActiveThorns = "NaNChecker"
 NaNChecker::check_every     = 1 # 512
 #NaNChecker::verbose         = "all"
 NaNChecker::action_if_found = "just warn"
@@ -121,18 +112,6 @@ NaNChecker::check_vars      = "
 "
 ActiveThorns = "Boundary CartGrid3D CoordBase SymBase ReflectionSymmetry CarpetRegrid2"
 
-CoordBase::domainsize = "minmax"
-
-CoordBase::xmin = $xmin
-CoordBase::ymin = $ymin
-CoordBase::zmin = $zmin
-CoordBase::xmax = $xmax
-CoordBase::ymax = $ymax
-CoordBase::zmax = $zmax
-CoordBase::dx   = $dx_plus
-CoordBase::dy   = $dy_plus
-CoordBase::dz   = $dz_plus
-
 CoordBase::boundary_size_x_lower     = 3
 CoordBase::boundary_size_y_lower     = 3
 CoordBase::boundary_size_z_lower     = 3
@@ -142,7 +121,9 @@ CoordBase::boundary_size_z_upper     = 3
 
 ReflectionSymmetry::reflection_x = "no"
 ReflectionSymmetry::reflection_y = "no"
-ReflectionSymmetry::reflection_z = "yes"
+# ReflectionSymmetry::reflection_z = "yes"
+
+ReflectionSymmetry::reflection_z = "no"
 ReflectionSymmetry::avoid_origin_x = "no"
 ReflectionSymmetry::avoid_origin_y = "no"
 ReflectionSymmetry::avoid_origin_z = "no"
@@ -150,10 +131,9 @@ ReflectionSymmetry::avoid_origin_z = "no"
 #CoordBase::boundary_shiftout_x_lower = 1
 CoordBase::boundary_shiftout_z_lower = 1
 
-CartGrid3D::type = "coordbase"
+# CartGrid3D::type = "coordbase"
 
-$AMR
-
+$grid_section
 
 ActiveThorns = "MoL Time"
 
@@ -172,6 +152,10 @@ ADMMacros::spatial_order = 4
 
 ActiveThorns = "TwoPunctures"
 
+ADMBase::lapse_timelevels = 3
+ADMBase::shift_timelevels = 3
+ADMBase::metric_timelevels = 3
+
 ADMBase::metric_type = "physical"
 
 ADMBase::initial_data    = "twopunctures"
@@ -181,7 +165,6 @@ ADMBase::initial_dtlapse = "zero"
 ADMBase::initial_dtshift = "zero"
 
 # needed for AHFinderDirect
-ADMBase::metric_timelevels = 3
 
 TwoPunctures::par_b          = $par_b
 TwoPunctures::par_m_plus     = $m_plus
@@ -375,126 +358,132 @@ IOHDF5::out2D_vars              = "
 # TimerReport::n_top_timers               = 20
 """
 
+    def __init__(self, simulation, base_name,N):
+        self.q = simulation["q"]
+        self.base_name = base_name
+        self.par_b = simulation["par_b"]
+        self.px_minus = simulation["px1"]
+        self.py_minus = -simulation["py1"]
+        self.pz_minus = -simulation["pz1"]
 
-def get_parameter_dict(simulation):
-    """Creates a parameter dictionary with all the parameters
-    to be written.
-    :param simulation: Dictionary containing all info for the
-    simulation.
-    :type simulation: dict
-    :returns: Dictionary with all parameters
-    :rtype: dict
-    """
-    # 1 denotes the (-) puncture
-    # 2 denotes the (+) puncture
-    par_file_parameters = {}
-    par_file_parameters["par_b"] = simulation["b"]
+        self.sx_minus = simulation["sx1"]
+        self.sy_minus = simulation["sy1"]
+        self.sz_minus = simulation["sz1"]
 
-    par_file_parameters["px_minus"] = simulation["px1"]
-    par_file_parameters["py_minus"] = -simulation["py1"]
-    par_file_parameters["pz_minus"] = -simulation["pz1"]
+        self.px_plus = -simulation["px2"]
+        self.py_plus = simulation["py2"]
+        self.pz_plus = simulation["pz2"]
 
-    par_file_parameters["sx_minus"] = simulation["sx1"]
-    par_file_parameters["sy_minus"] = simulation["sy1"]
-    par_file_parameters["sz_minus"] = simulation["sz1"]
+        self.sx_plus = simulation["sx2"]
+        self.sy_plus = simulation["sy2"]
+        self.sz_plus = simulation["sz2"]
 
-    par_file_parameters["px_plus"] = -simulation["px2"]
-    par_file_parameters["py_plus"] = simulation["py2"]
-    par_file_parameters["pz_plus"] = simulation["pz2"]
+        self.m_plus = simulation["q"]
+        self.m_minus = 1.0
 
-    par_file_parameters["sx_plus"] = simulation["sx2"]
-    par_file_parameters["sy_plus"] = simulation["sy2"]
-    par_file_parameters["sz_plus"] = simulation["sz2"]
+        if "vanilla" in self.base_name:
+            self.ex_r = 0.0
+        else:
+            self.ex_r = simulation["ex_r"]
 
-    par_file_parameters["m_plus"] = simulation["q"]
-    par_file_parameters["m_minus"] = 1.0
-    par_file_parameters["ex_r"] = simulation["ex_r"]
+        self.dx_plus = self.m_plus / 100
+        self.dy_plus = self.m_plus / 100
+        self.dz_plus = self.m_plus / 100
+        self.dx_minus = self.m_minus / 100
+        self.dy_minus = self.m_minus / 100
+        self.dz_minus = self.m_minus / 100
 
-    par_file_parameters["xmin"] = -simulation["b"] - simulation["q"]
-    par_file_parameters["xmax"] = simulation["b"] + simulation["q"]
+        self.sim_dir = "/".join((glb.simulations_path,
+                                 self.base_name))
 
-    par_file_parameters["ymin"] = -simulation["q"]
-    par_file_parameters["ymax"] = simulation["q"]
+        self.EH_minus = glb.min_r
+        self.EH_plus = self.m_plus/2
 
-    par_file_parameters["zmin"] = 0.0
-    par_file_parameters["zmax"] = simulation["q"]
-
-    par_file_parameters["dx_minus"] = 1. / 100.0
-    par_file_parameters["dy_minus"] = 1. / 100.0
-    par_file_parameters["dz_minus"] = 1. / 100.0
-
-    par_file_parameters["dx_plus"] = simulation["q"] / 100.0
-    par_file_parameters["dy_plus"] = simulation["q"] / 100.0
-    par_file_parameters["dz_plus"] = simulation["q"] / 100.0
-
-    return par_file_parameters
-
-def find_new_dx_fine_minus(params,coarser=True):
-    old_plus_dx = params["dx_plus"]
-    old_minus_dx = params["dx_minus"]
-
-    if coarser:
-        factor = np.floor( np.log2( old_plus_dx / old_minus_dx ))
-    else:
-        factor = np.ceil( np.log2( old_plus_dx / old_minus_dx  ))
-    new_minus_dx = old_plus_dx / 2.0**factor
-    params["dx_minus"] = new_minus_dx
-    params["dy_minus"] = new_minus_dx
-    params["dz_minus"] = new_minus_dx
-
-    return params
-
-def create_AMR(parameters):
-
-    EH_minus = glb.min_r
-    EH_plus = parameters["m_plus"]/2
-
-    refinement_radii_minus = tuple(EH_minus * 2**level for level in range(4))
-    refinement_radii_plus = tuple(EH_plus * 2**level for level in range(1))
-
-    # print(refinement_radii_minus)
-    # print(refinement_radii_plus)
-
-    x_minus = -parameters["par_b"]
-    x_plus = parameters["par_b"]
-
-    # center_1 => (-) puncture ( small BH, m = 1 )
-    # center_2 => (+) puncture ( big BH, m = q )
-    center1 = pg.RefinementCenter(refinement_radii_minus,\
-                                  dx_fine=parameters["dx_minus"],\
-                                  cfl_fine=0.5,\
-                                  center_num=1,\
-                                  position=(x_minus,0,0))
-
-    # Same but with different center_num and position
-    center2 = pg.RefinementCenter(refinement_radii_plus,\
-                                  dx_fine=parameters["dx_plus"],\
-                                  cfl_fine=0.5,\
-                                  center_num=2,\
-                                  position=(x_plus,0,0))
-    grid_not_synced = pg.Grid((center1, center2), outer_boundary=1000)
-    grid_synced = pg.set_dt_max_grid(grid_not_synced, dt_max=1)
-    return grid_synced.parfile_code
+        self._calculate_new_dx_minus()
+        self._calculate_N_before_overlap()
+        self._calculate_refinement_radii()
+        self._calculate_outer_boundary()
+        self._calculate_grid_section()
+        self._calculate_parfile_path()
+        self._calculate_parfile_content()
 
 
-def create_par_file(simulation, base_name):
-    """Writes the parameter file.
+    def _calculate_parfile_path(self):
+        """Calculates the path of the parameter file.
+        """
+        self.parfile_path = f"{glb.parfiles_path}/{self.base_name}.par"
 
-    :param simulation: Dictionary with simulation info.
-    :type simulation: dict
-    :param base_name: Name string that serves as a base to name parameter files.
-    :type base_name: str
-    """
-    parameters = get_parameter_dict(simulation)
-    if "vanilla" in base_name:
-        parameters["ex_r"] = 0.0
+    def write_parfile(self):
+        """Writes the parameter file.
+        """
+        with open(self.parfile_path,"w") as parfile:
+            parfile.write(self.parfile_content)
 
-    parameters["sim_dir"] = "/".join((glb.simulations_path, base_name))
-    parameters = find_new_dx_fine_minus(parameters)
-    AMR = create_AMR(parameters)
+    def _calculate_parfile_content(self):
+        """Calculates the content of the parameter file
+        """
+        self.parfile_content = Template(Parameter_File._lines).substitute(self.__dict__)
 
-    parameters["AMR"] = AMR
-    par_file_content = Template(lines).substitute(parameters)
-    par_file_path = "/".join((glb.parfiles_path, base_name + ".par"))
-    with open(par_file_path, "w") as parfile:
-        parfile.write(par_file_content)
+    def _calculate_grid_section(self):
+        """Calculates the grid section, taking into account
+        the AMR, using a PreCactus module.
+        """
+        center1 = pg.RefinementCenter(self.rr_minus,
+                                      dx_fine=self.dx_minus,
+                                      cfl_fine=0.5,
+                                      center_num=1,
+                                      position=(-self.par_b,0,0))
+
+        # Same but with different center_num and position
+        center2 = pg.RefinementCenter(self.rr_plus,
+                                      dx_fine=self.dx_plus,
+                                      cfl_fine=0.5,
+                                      center_num=2,
+                                      position=(self.par_b,0,0))
+        grid_not_synced = pg.Grid((center1, center2),
+                                  outer_boundary=self.outer_boundary)
+        grid_synced = pg.set_dt_max_grid(grid_not_synced,
+                                         dt_max=1)
+        self.grid_section = grid_synced.parfile_code
+
+
+    def _calculate_outer_boundary(self):
+        """Calculates the outer boundary to be 2 times
+        the maximum refinement radii's.
+        """
+        out_bndr = max(max(self.rr_minus,
+                           self.rr_plus))
+        self.outer_boundary = out_bndr
+        while (self.outer_boundary < self.par_b + out_bndr):
+            self.outer_boundary = self.outer_boundary * 2
+
+    def _calculate_refinement_radii(self):
+        """Calculates the refinement radii as the event horizon
+        of each black hole times powers of 2.
+        """
+        self.rr_plus = tuple(self.EH_plus * 2**level
+                             for level in range(self.N_plus+self.N))
+        self.rr_minus = tuple(self.EH_minus * 2**level
+                              for level in range(self.N_minus+self.N))
+
+    def _calculate_N_before_overlap(self,d=0):
+        """Calculates the maximum number of refinement radii
+        before the two radii overlap. This can be seen as a limit
+        before they overlap. It's ok if they overlap.
+        """
+        n_plus = np.log2( (2* self.par_b - d) /
+                          (self.m_plus + self.m_minus
+                           * 2**self.factor ) ) + 1
+        n_minus = n_plus + self.factor
+        self.N_plus = int(round(n_plus))
+        self.N_minus = int(round(n_minus))
+
+    def _calculate_new_dx_minus(self):
+        """Calculates the new resolution of the smaller black
+        hole according to the resolution of the big black hole,
+        so that its consistent with AMR.
+        """
+        self.factor = np.floor( np.log2( self.q ))
+        self.dx_minus = self.dx_plus / 2.0**self.factor
+        self.dy_minus = self.dy_plus / 2.0**self.factor
+        self.dz_minus = self.dz_plus / 2.0**self.factor
