@@ -31,8 +31,8 @@ import time
 import numpy as np
 import htcondor as htc
 import ektome.globals as glb
-import ektome.proektome.create_sub_file as csf
 import ektome.proektome.parfile as p
+import ektome.proektome.create_sub_file as csf
 
 
 def create_base_names(simulation):
@@ -48,13 +48,13 @@ def create_base_names(simulation):
     tmp = []
     for i in simulation:
         if (simulation[i] - int(simulation[i])) == 0.0:
-            tmp.append("_{}{}".format(str(i), int(simulation[i])))
+            tmp.append(f"_{i}{int(simulation[i])}")
         else:
-            tmp.append("_{}{}".format(str(i), simulation[i]))
+            tmp.append(f"_{i}{simulation[i]}")
 
     suffix = "".join(tmp)
-    vnl_name = "vanilla" + suffix
-    exc_name = "excision" + suffix
+    vnl_name = "vanilla{suffix}"
+    exc_name = "excision{suffix}"
     return vnl_name, exc_name
 
 
@@ -66,7 +66,7 @@ def create_sim_dir(base_name):
     :returns: Directory path
     :rtype: str
     """
-    dir_name = "/".join((glb.simulations_path, base_name))
+    dir_name = f"{glb.simulations_path}/{base_name}"
 
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)

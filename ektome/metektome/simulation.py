@@ -233,14 +233,6 @@ class Simulation:
                 psis.append(var1d[i])
                 xs.append(x1d[i])
                 ys.append(y1d[i])
-
-        if self.ex_r != 0 and hist:
-            plt.clf()
-            plt.tick_params(direction="in")
-            bns = int(np.sqrt(len(psis)))
-            plt.hist(psis, bins=len(psis), density=True)
-            plt.title(r"$\psi$ at excision sphere")
-            plt.savefig("%s-hist.png" % self.sim_dir)
         return xs, ys, psis
 
     def plot_u_xy(self):
@@ -267,7 +259,7 @@ class Simulation:
 
         rs_radius2 = plt.Circle((self.par_b, 0), self.mp / 2, color="black", fill=False)
 
-        xs, ys, psis = self.psi_value_at_excision()
+        xs, ys, _ = self.psi_value_at_excision()
         plt.scatter(xs, ys, color="green", marker="+")
         plt.gcf().gca().add_artist(excision_sphere)
         plt.gcf().gca().add_artist(rs_radius1)
@@ -309,7 +301,7 @@ class Simulation:
         plt.gcf().gca().add_artist(rs_radius1)
         plt.gcf().gca().add_artist(rs_radius2)
 
-        xs, ys, psis = self.psi_value_at_excision()
+        xs, ys, _ = self.psi_value_at_excision()
         plt.scatter(xs, ys, color="green", marker="+")
 
         plt.xlim(self.xmin, self.xmax)
