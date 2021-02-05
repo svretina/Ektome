@@ -360,6 +360,7 @@ IOHDF5::out2D_vars              = "
 
     def __init__(self, simulation, base_name,N):
         self.q = simulation["q"]
+        self.N = N
         self.base_name = base_name
         self.par_b = simulation["par_b"]
         self.px_minus = simulation["px1"]

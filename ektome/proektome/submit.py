@@ -32,7 +32,7 @@ import numpy as np
 import htcondor as htc
 import ektome.globals as glb
 import ektome.proektome.create_sub_file as csf
-import ektome.proektome.parfile
+import ektome.proektome.parfile as p
 
 def create_base_names(simulation):
     """Creates a name which serves as a base to name various
@@ -167,10 +167,10 @@ def submit(simulation):
 
 
     # Create parameter files
-    vanilla_parfile = parfile.Parameter_File(simulation, vanilla_base_name, 3)
+    vanilla_parfile = p.Parameter_File(simulation, vanilla_base_name, 3)
     vanilla_parfile.write_parfile()
 
-    excision_parfile = parfile.Parameter_File(simulation, excision_base_name, 3)
+    excision_parfile = p.Parameter_File(simulation, excision_base_name, 3)
     excision_parfile.write_parfile()
 
 
