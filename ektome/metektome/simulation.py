@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
 
-import pandas as pd
-import numpy as np
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import re, os
-import matplotlib.cm as cm
-import sys
 from kuibit.simdir import SimDir
 import ektome.globals as glb
 
@@ -113,14 +104,14 @@ class Simulation:
         dy = self.read_param("dy", self.param_file)
         dz = self.read_param("dz", self.param_file)
 
-        ## Momenta
+        # Momenta
         p1x = self.read_param("momentum1x", self.metadata)
         p1y = self.read_param("momentum1y", self.metadata)
         p1z = self.read_param("momentum1z", self.metadata)
         p2x = self.read_param("momentum2x", self.metadata)
         p2y = self.read_param("momentum2y", self.metadata)
         p2z = self.read_param("momentum2z", self.metadata)
-        ## Spins
+        # Spins
         s1x = self.read_param("spin1x", self.metadata)
         s1y = self.read_param("spin1y", self.metadata)
         s1z = self.read_param("spin1z", self.metadata)
@@ -155,7 +146,7 @@ class Simulation:
         u = sim.gf.xy.fields.puncture_u[0]
         psi = sim.gf.xy.fields.my_psi[0]
 
-        ## Use this with AMR
+        # Use this with AMR
         # u   = u.merge_refinement_levels(resample=True)
         # psi = psi.merge_refinement_levels(resample=True)
         xmesh = u.coordinates()[0][0][0][:].T

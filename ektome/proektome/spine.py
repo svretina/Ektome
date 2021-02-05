@@ -45,7 +45,7 @@ def read_config():
     parser = cfg.ConfigParser()
     try:
         parser.read(glb.config_path)
-    except:
+    except ValueError:
         parser.read(get_ini_file())
     config = {}
     temp = {}
@@ -253,13 +253,11 @@ def create_simulation_dict_and_submit(cfg_arr):
 
 
 if __name__ == "__main__":
-    # Search for any config file (.ini) file to read:
-    config_file_path = get_ini_file(glb.proj_path)
     # Read the config file
     config_dict = read_config()
     config_arr = create_config_arrays(config_dict)
     # Create output directories
-    create_dirs(glb.proj_path)
+    create_dirs()
     # Create simulation dictionary and submit it
     create_simulation_dict_and_submit(config_arr)
 

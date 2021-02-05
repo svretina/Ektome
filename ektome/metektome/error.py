@@ -2,15 +2,7 @@
 
 import pandas as pd
 import numpy as np
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import re, os
-import matplotlib.cm as cm
-import sys
-from kuibit.simdir import SimDir
 
 import ektome.metektome.simulation as sim
 

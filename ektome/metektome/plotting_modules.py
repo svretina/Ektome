@@ -6,7 +6,6 @@ import os, sys
 import matplotlib.pyplot as plt
 
 import ektome.globals as glb
-import ektome.metektome.osteo as o
 
 
 def plot_error_u_xy(error_obj):
@@ -331,11 +330,9 @@ def plot_error_curve_momentum(error_dict):
     # plt.plot(b,theoretical,marker="x",label="p=0.0")
     markers = ["o", "+", "*", "1", "D", "X", ".", "^", "s", "H"]
     for state, frame in data.groupby(by=["b"]):
-        counter = np.random.randint(0, len(markers))
         plt.scatter(
             frame["p1"],
             frame["max_error_psi"],
-            marker=markers[counter],
             label=f"b={state}",
         )
 
