@@ -6,6 +6,12 @@ authors = ["Stamatis Vretinaris <stamatis.vretinaris@aei.mpg.de>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+numpy = "^1.20.0"
+htcondor = "^8.9.11"
+configparser = "^5.0.1"
+kuibit = "^1.0.0-beta.0"
+pandas = "^1.2.1"
+matplotlib = "^3.3.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
