@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import pandas as pd
-import numpy as np
 import os
-
+import pandas as pd
 import ektome.metektome.error as e
-import ektome.metektome.plotting_modules as pm
 import ektome.metektome.simulation as sim
+import ektome.metektome.plotting_modules as pm
 
 
 def loop_over_folders(save=True, plot=True):

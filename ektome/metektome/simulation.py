@@ -7,6 +7,8 @@ import ektome.globals as glb
 import re
 
 class Simulation:
+
+
     def __init__(self, sim_name):
         self.proj_dir = glb.proj_path
         self.sim_name = sim_name

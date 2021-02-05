@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
+import os
+import sys
 import pandas as pd
-import numpy as np
-import os, sys
 import matplotlib.pyplot as plt
 
-import ektome.globals as glb
 
 
 def plot_error_u_xy(error_obj):
@@ -257,9 +256,6 @@ def plot_error_curve_separation(error_dict, mode):
             theoretical = q / (4.0 * b - q)
             error_psi = frame["max_error_psi"].values
             dif = theoretical - error_psi
-            # print(dif, frame["p1"].values[0], frame["p2"].values[0])
-            # if np.any( dif < 0):
-            #     print(frame[["p1","p2"]])
             plt.semilogy(
                 b,
                 error_psi,

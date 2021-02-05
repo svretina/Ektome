@@ -23,13 +23,13 @@ The functions available are:
 
 """
 
-import configparser as cfg
 import os
 import sys
-import numpy as np
-import ektome.proektome.submit as sb
-import ektome.globals as glb
 import math
+import numpy as np
+import configparser as cfg
+import ektome.globals as glb
+import ektome.proektome.submit as sb
 
 
 def read_config():
