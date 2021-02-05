@@ -21,6 +21,7 @@ from precactus import grid as pg
 import numpy as np
 import ektome.globals as glb
 
+
 class Parameter_File:
     _lines = """
 Cactus::cctk_run_title = "QC-0"
@@ -358,7 +359,7 @@ IOHDF5::out2D_vars              = "
 # TimerReport::n_top_timers               = 20
 """
 
-    def __init__(self, simulation, base_name,N):
+    def __init__(self, simulation, base_name, N):
         self.q = simulation["q"]
         self.N = N
         self.base_name = base_name
@@ -394,11 +395,10 @@ IOHDF5::out2D_vars              = "
         self.dy_minus = self.m_minus / 100
         self.dz_minus = self.m_minus / 100
 
-        self.sim_dir = "/".join((glb.simulations_path,
-                                 self.base_name))
+        self.sim_dir = "/".join((glb.simulations_path, self.base_name))
 
         self.EH_minus = glb.min_r
-        self.EH_plus = self.m_plus/2
+        self.EH_plus = self.m_plus / 2
 
         self._calculate_new_dx_minus()
         self._calculate_N_before_overlap()
@@ -408,73 +408,80 @@ IOHDF5::out2D_vars              = "
         self._calculate_parfile_path()
         self._calculate_parfile_content()
 
-
     def _calculate_parfile_path(self):
-        """Calculates the path of the parameter file.
-        """
+        """Calculates the path of the parameter file."""
         self.parfile_path = f"{glb.parfiles_path}/{self.base_name}.par"
 
     def write_parfile(self):
-        """Writes the parameter file.
-        """
-        with open(self.parfile_path,"w") as parfile:
+        """Writes the parameter file."""
+        with open(self.parfile_path, "w") as parfile:
             parfile.write(self.parfile_content)
 
     def _calculate_parfile_content(self):
-        """Calculates the content of the parameter file
-        """
-        self.parfile_content = Template(Parameter_File._lines).substitute(self.__dict__)
+        """Calculates the content of the parameter file"""
+        self.parfile_content = Template(Parameter_File._lines).substitute(
+            self.__dict__
+        )
 
     def _calculate_grid_section(self):
         """Calculates the grid section, taking into account
         the AMR, using a PreCactus module.
         """
-        center1 = pg.RefinementCenter(self.rr_minus,
-                                      dx_fine=self.dx_minus,
-                                      cfl_fine=0.5,
-                                      center_num=1,
-                                      position=(-self.par_b,0,0))
+        center1 = pg.RefinementCenter(
+            self.rr_minus,
+            dx_fine=self.dx_minus,
+            cfl_fine=0.5,
+            center_num=1,
+            position=(-self.par_b, 0, 0),
+        )
 
         # Same but with different center_num and position
-        center2 = pg.RefinementCenter(self.rr_plus,
-                                      dx_fine=self.dx_plus,
-                                      cfl_fine=0.5,
-                                      center_num=2,
-                                      position=(self.par_b,0,0))
-        grid_not_synced = pg.Grid((center1, center2),
-                                  outer_boundary=self.outer_boundary)
-        grid_synced = pg.set_dt_max_grid(grid_not_synced,
-                                         dt_max=1)
+        center2 = pg.RefinementCenter(
+            self.rr_plus,
+            dx_fine=self.dx_plus,
+            cfl_fine=0.5,
+            center_num=2,
+            position=(self.par_b, 0, 0),
+        )
+        grid_not_synced = pg.Grid(
+            (center1, center2), outer_boundary=self.outer_boundary
+        )
+        grid_synced = pg.set_dt_max_grid(grid_not_synced, dt_max=1)
         self.grid_section = grid_synced.parfile_code
-
 
     def _calculate_outer_boundary(self):
         """Calculates the outer boundary to be 2 times
         the maximum refinement radii's.
         """
-        out_bndr = max(max(self.rr_minus,
-                           self.rr_plus))
+        out_bndr = max(max(self.rr_minus, self.rr_plus))
         self.outer_boundary = out_bndr
-        while (self.outer_boundary < self.par_b + out_bndr):
+        while self.outer_boundary < self.par_b + out_bndr:
             self.outer_boundary = self.outer_boundary * 2
 
     def _calculate_refinement_radii(self):
         """Calculates the refinement radii as the event horizon
         of each black hole times powers of 2.
         """
-        self.rr_plus = tuple(self.EH_plus * 2**level
-                             for level in range(self.N_plus+self.N))
-        self.rr_minus = tuple(self.EH_minus * 2**level
-                              for level in range(self.N_minus+self.N))
+        self.rr_plus = tuple(
+            self.EH_plus * 2 ** level for level in range(self.N_plus + self.N)
+        )
+        self.rr_minus = tuple(
+            self.EH_minus * 2 ** level
+            for level in range(self.N_minus + self.N)
+        )
 
-    def _calculate_N_before_overlap(self,d=0):
+    def _calculate_N_before_overlap(self, d=0):
         """Calculates the maximum number of refinement radii
         before the two radii overlap. This can be seen as a limit
         before they overlap. It's ok if they overlap.
         """
-        n_plus = np.log2( (2* self.par_b - d) /
-                          (self.m_plus + self.m_minus
-                           * 2**self.factor ) ) + 1
+        n_plus = (
+            np.log2(
+                (2 * self.par_b - d)
+                / (self.m_plus + self.m_minus * 2 ** self.factor)
+            )
+            + 1
+        )
         n_minus = n_plus + self.factor
         self.N_plus = int(round(n_plus))
         self.N_minus = int(round(n_minus))
@@ -484,7 +491,7 @@ IOHDF5::out2D_vars              = "
         hole according to the resolution of the big black hole,
         so that its consistent with AMR.
         """
-        self.factor = np.floor( np.log2( self.q ))
-        self.dx_minus = self.dx_plus / 2.0**self.factor
-        self.dy_minus = self.dy_plus / 2.0**self.factor
-        self.dz_minus = self.dz_plus / 2.0**self.factor
+        self.factor = np.floor(np.log2(self.q))
+        self.dx_minus = self.dx_plus / 2.0 ** self.factor
+        self.dy_minus = self.dy_plus / 2.0 ** self.factor
+        self.dz_minus = self.dz_plus / 2.0 ** self.factor

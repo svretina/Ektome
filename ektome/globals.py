@@ -19,7 +19,7 @@
 
 import os
 
-min_r = 0.5 # Schwarzshild radius for M = 1 in isotropic coords
+min_r = 0.5  # Schwarzshild radius for M = 1 in isotropic coords
 proj_path = os.getcwd()
 simulations_path = f"{proj_path}/simulations"
 results_path = f"{proj_path}/results"

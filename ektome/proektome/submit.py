@@ -34,6 +34,7 @@ import ektome.globals as glb
 import ektome.proektome.create_sub_file as csf
 import ektome.proektome.parfile as p
 
+
 def create_base_names(simulation):
     """Creates a name which serves as a base to name various
     output files and directories.
@@ -65,7 +66,7 @@ def create_sim_dir(base_name):
     :returns: Directory path
     :rtype: str
     """
-    dir_name = "/".join((glb.simulations_path,base_name))
+    dir_name = "/".join((glb.simulations_path, base_name))
 
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
@@ -95,8 +96,8 @@ def submit_simulation(sub_file_dict):
             return 0
 
 
-def norm(x,y,z):
-    return np.sqrt(x*x + y*y+z*z)
+def norm(x, y, z):
+    return np.sqrt(x * x + y * y + z * z)
 
 
 def calculate_momentum(simulation):
@@ -114,7 +115,7 @@ def calculate_momentum(simulation):
     px2 = simulation["px2"]
     py2 = simulation["py2"]
     pz2 = simulation["pz2"]
-    return norm(px1,py1,pz1), norm(px2,py2,pz2)
+    return norm(px1, py1, pz1), norm(px2, py2, pz2)
 
 
 def calculate_spin(simulation):
@@ -132,9 +133,10 @@ def calculate_spin(simulation):
     sx2 = simulation["sx2"]
     sy2 = simulation["sy2"]
     sz2 = simulation["sz2"]
-    return norm(sx1,sy1,sz1), norm(sx2,sy2,sz2)
+    return norm(sx1, sy1, sz1), norm(sx2, sy2, sz2)
 
-def write_submit_metadata(cluster_id,base_name):
+
+def write_submit_metadata(cluster_id, base_name):
     """Writes the cluster_id and the simulation name into a
     metadata file.
 
@@ -146,6 +148,7 @@ def write_submit_metadata(cluster_id,base_name):
     with open(glb.metadata_path, "a") as metadata:
         metadata.write(f"{base_name},{cluster_id}\n")
 
+
 def submit(simulation):
     """Main submit function. Creates parameter and submition files
     creates output directory and submits a simulation through Condor.
@@ -156,7 +159,7 @@ def submit(simulation):
     s1, s2 = calculate_spin(simulation)
     p1, p2 = calculate_momentum(simulation)
 
-    if (s1 > 1) or (s2 >1):
+    if (s1 > 1) or (s2 > 1):
         print("Spin > 1")
         return 1
     if (p1 > 1) or (p2 > 1):
@@ -165,14 +168,12 @@ def submit(simulation):
 
     vanilla_base_name, excision_base_name = create_base_names(simulation)
 
-
     # Create parameter files
     vanilla_parfile = p.Parameter_File(simulation, vanilla_base_name, 3)
     vanilla_parfile.write_parfile()
 
     excision_parfile = p.Parameter_File(simulation, excision_base_name, 3)
     excision_parfile.write_parfile()
-
 
     # Create submition files
     vnl_sub = csf.create_sub_dict(simulation, vanilla_base_name)

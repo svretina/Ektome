@@ -32,6 +32,7 @@ import ektome.proektome.submit as sb
 import ektome.globals as glb
 import math
 
+
 def read_config():
     """Reads a config file and returns a dictionary with its
     contents.
@@ -96,6 +97,7 @@ def create_dirs():
     else:
         pass
 
+
 def get_ini_file():
     """Searches for a .ini config file and returns its path.
 
@@ -108,6 +110,7 @@ def get_ini_file():
             return file
         continue
     return None
+
 
 def clear_submit_metadata():
     if os.path.exists(glb.metadata_path):
@@ -128,18 +131,21 @@ def create_config_arrays(cfg_dict):
         try:
             if "array" in cfg_dict[section].keys():
                 temp_array = cfg_dict[section]["array"].split(",")
-                config_array[section] = np.array([ float(x) for x in temp_array])
+                config_array[section] = np.array(
+                    [float(x) for x in temp_array]
+                )
             else:
                 start = float(cfg_dict[section]["start"])
                 end = float(cfg_dict[section]["end"])
                 step = float(cfg_dict[section]["step"])
                 N = int((end - start) / step + 1)
                 tmp = np.linspace(start, end, N)
-                config_array[section] = np.round(tmp,3)
+                config_array[section] = np.round(tmp, 3)
 
         except (ValueError, KeyError):
             config_array[section] = np.nan
     return config_array
+
 
 def submit_simulation(simulation_dict):
     _ = sb.submit(simulation_dict)
@@ -168,36 +174,95 @@ def create_simulation_dict_and_submit(cfg_arr):
                                     for sx2 in cfg_arr["minus_spin_x"]:
                                         for sy2 in cfg_arr["minus_spin_y"]:
                                             for sz2 in cfg_arr["minus_spin_z"]:
-                                                for pz2 in cfg_arr["minus_momentum_z"]:
-                                                    for py2 in cfg_arr["minus_momentum_y"]:
-                                                        for px2 in cfg_arr["minus_momentum_x"]:
+                                                for pz2 in cfg_arr[
+                                                    "minus_momentum_z"
+                                                ]:
+                                                    for py2 in cfg_arr[
+                                                        "minus_momentum_y"
+                                                    ]:
+                                                        for px2 in cfg_arr[
+                                                            "minus_momentum_x"
+                                                        ]:
                                                             max_r = q / 2.0
-                                                            if not math.isnan(cfg_arr["excision"]):
-                                                                step = float(cfg["excision"]["step"])
-                                                                radii = np.arange(glb.min_r, max_r + step, step)
+                                                            if not math.isnan(
+                                                                cfg_arr[
+                                                                    "excision"
+                                                                ]
+                                                            ):
+                                                                step = float(
+                                                                    cfg[
+                                                                        "excision"
+                                                                    ]["step"]
+                                                                )
+                                                                radii = np.arange(
+                                                                    glb.min_r,
+                                                                    max_r
+                                                                    + step,
+                                                                    step,
+                                                                )
                                                             else:
                                                                 radii = [max_r]
                                                             for ex_r in radii:
-                                                                if math.isnan(cfg_arr["error"]):
-                                                                    simulation["q"] = q
-                                                                    simulation["par_b"] = b
-                                                                    simulation["px1"] = px1
-                                                                    simulation["py1"] = py1
-                                                                    simulation["pz1"] = pz1
-                                                                    simulation["sx1"] = sx1
-                                                                    simulation["sy1"] = sy1
-                                                                    simulation["sz1"] = sz1
-                                                                    simulation["px2"] = px2
-                                                                    simulation["py2"] = py2
-                                                                    simulation["pz2"] = pz2
-                                                                    simulation["sx2"] = sx2
-                                                                    simulation["sy2"] = sy2
-                                                                    simulation["sz2"] = sz2
+                                                                if math.isnan(
+                                                                    cfg_arr[
+                                                                        "error"
+                                                                    ]
+                                                                ):
+                                                                    simulation[
+                                                                        "q"
+                                                                    ] = q
+                                                                    simulation[
+                                                                        "par_b"
+                                                                    ] = b
+                                                                    simulation[
+                                                                        "px1"
+                                                                    ] = px1
+                                                                    simulation[
+                                                                        "py1"
+                                                                    ] = py1
+                                                                    simulation[
+                                                                        "pz1"
+                                                                    ] = pz1
+                                                                    simulation[
+                                                                        "sx1"
+                                                                    ] = sx1
+                                                                    simulation[
+                                                                        "sy1"
+                                                                    ] = sy1
+                                                                    simulation[
+                                                                        "sz1"
+                                                                    ] = sz1
+                                                                    simulation[
+                                                                        "px2"
+                                                                    ] = px2
+                                                                    simulation[
+                                                                        "py2"
+                                                                    ] = py2
+                                                                    simulation[
+                                                                        "pz2"
+                                                                    ] = pz2
+                                                                    simulation[
+                                                                        "sx2"
+                                                                    ] = sx2
+                                                                    simulation[
+                                                                        "sy2"
+                                                                    ] = sy2
+                                                                    simulation[
+                                                                        "sz2"
+                                                                    ] = sz2
 
-                                                                    simulation["ex_r"] = ex_r
-                                                                    submit_simulation(simulation)
+                                                                    simulation[
+                                                                        "ex_r"
+                                                                    ] = ex_r
+                                                                    submit_simulation(
+                                                                        simulation
+                                                                    )
                                                                     exit()
-                                                                    counter = counter + 1
+                                                                    counter = (
+                                                                        counter
+                                                                        + 1
+                                                                    )
+
 
 if __name__ == "__main__":
     # Search for any config file (.ini) file to read:

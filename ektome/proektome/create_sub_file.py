@@ -23,6 +23,7 @@ The functions available are:
 
 import ektome.globals as glb
 
+
 def create_sub_dict(simulation, base_name):
     """Writes the submition file.
 
@@ -49,19 +50,19 @@ def create_sub_dict(simulation, base_name):
 
     sim_dir = "/".join((glb.simulations_path, base_name))
     sub_file_dict = {
-        "executable":"/work/stamatis.vretinaris/opt/Cactus/exe/cactus_sim",
+        "executable": "/work/stamatis.vretinaris/opt/Cactus/exe/cactus_sim",
         "arguments": par_file_path,
-        "universe":"vanilla",
-        "output": sim_dir+"/out",
-        "error": sim_dir+"/err",
-        "log": sim_dir+"/log",
-        "accounting_group" : "cbc.prod.initial_data",
-        "request_cpus" : "Target.TotalSlotCPUs",
-        "getenv" : "True",
-        "request_memory" : "Target.TotalSlotMemory",
+        "universe": "vanilla",
+        "output": sim_dir + "/out",
+        "error": sim_dir + "/err",
+        "log": sim_dir + "/log",
+        "accounting_group": "cbc.prod.initial_data",
+        "request_cpus": "Target.TotalSlotCPUs",
+        "getenv": "True",
+        "request_memory": "Target.TotalSlotMemory",
         "Rank": "Memory",
-        "on_exit_hold" : "( ExitCode != 0 )",
-        "kill_sig" :"15",
+        "on_exit_hold": "( ExitCode != 0 )",
+        "kill_sig": "15",
     }
     # "request_memory":f"max({{{memory}, Target.TotalSlotMemory}})",
 
