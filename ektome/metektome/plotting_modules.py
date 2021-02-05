@@ -169,7 +169,7 @@ def plot_u_xy(sim_obj):
         (sim_obj.par_b, 0), sim_obj.mp / 2, color="black", fill=False
     )
 
-    xs, ys, psis = sim_obj.psi_value_at_excision()
+    xs, ys, _ = sim_obj.psi_value_at_excision()
     plt.scatter(xs, ys, color="green", marker="+")
     plt.gcf().gca().add_artist(excision_sphere)
     plt.gcf().gca().add_artist(rs_radius1)
@@ -217,7 +217,7 @@ def plot_psi_xy(sim_obj):
     plt.gcf().gca().add_artist(rs_radius1)
     plt.gcf().gca().add_artist(rs_radius2)
 
-    xs, ys, psis = sim_obj.psi_value_at_excision()
+    xs, ys, _ = sim_obj.psi_value_at_excision()
     plt.scatter(xs, ys, color="green", marker="+")
 
     plt.xlim(sim_obj.xmin, sim_obj.xmax)
@@ -311,31 +311,31 @@ def plot_error_curve_separation(error_dict, mode):
     plt.savefig(f"{results_dir}error_separation-{mode}.png")
 
 
-def plot_error_curve_momentum(error_dict):
-    plt.clf()
-    if not isinstance(error_dict, pd.core.frame.DataFrame):
-        data = pd.read_csv(error_dict, header=0)
-    else:
-        data = error_dict
-    print(data)
-    q = data["q"][0]
-    b = data["b"].values
-    theoretical = q / (4.0 * b - q)
+# def plot_error_curve_momentum(error_dict):
+#     plt.clf()
+#     if not isinstance(error_dict, pd.core.frame.DataFrame):
+#         data = pd.read_csv(error_dict, header=0)
+#     else:
+#         data = error_dict
+#     print(data)
+#     q = data["q"][0]
+#     b = data["b"].values
+#     theoretical = q / (4.0 * b - q)
 
-    # plt.plot(b,theoretical,marker="x",label="p=0.0")
-    markers = ["o", "+", "*", "1", "D", "X", ".", "^", "s", "H"]
-    for state, frame in data.groupby(by=["b"]):
-        plt.scatter(
-            frame["p1"],
-            frame["max_error_psi"],
-            label=f"b={state}",
-        )
+#     # plt.plot(b,theoretical,marker="x",label="p=0.0")
+#     markers = ["o", "+", "*", "1", "D", "X", ".", "^", "s", "H"]
+#     for state, frame in data.groupby(by=["b"]):
+#         plt.scatter(
+#             frame["p1"],
+#             frame["max_error_psi"],
+#             label=f"b={state}",
+#         )
 
-    # plt.plot(b,theoretical,marker="x",label="p=0.0")
+#     # plt.plot(b,theoretical,marker="x",label="p=0.0")
 
-    plt.title(r"Maximum Error in $\Psi$")
-    plt.xlabel("momentum")
-    plt.ylabel("Maximum Error")
-    plt.legend()
-    results_dir = os.getcwd() + "/results/figures/error-analysis/"
-    plt.savefig(f"{results_dir}error_momentum.png")
+#     plt.title(r"Maximum Error in $\Psi$")
+#     plt.xlabel("momentum")
+#     plt.ylabel("Maximum Error")
+#     plt.legend()
+#     results_dir = os.getcwd() + "/results/figures/error-analysis/"
+#     plt.savefig(f"{results_dir}error_momentum.png")

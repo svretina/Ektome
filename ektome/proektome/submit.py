@@ -53,8 +53,8 @@ def create_base_names(simulation):
             tmp.append(f"_{i}{simulation[i]}")
 
     suffix = "".join(tmp)
-    vnl_name = "vanilla{suffix}"
-    exc_name = "excision{suffix}"
+    vnl_name = f"vanilla{suffix}"
+    exc_name = f"excision{suffix}"
     return vnl_name, exc_name
 
 

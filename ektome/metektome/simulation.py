@@ -217,7 +217,7 @@ class Simulation:
 
         return ind, var[ind]
 
-    def psi_value_at_excision(self, hist=False):
+    def psi_value_at_excision(self):
         x1d = self.xmesh.copy().ravel()
         y1d = self.ymesh.copy().ravel()
 
