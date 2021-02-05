@@ -6,8 +6,8 @@ from kuibit.simdir import SimDir
 import ektome.globals as glb
 import re
 
-class Simulation:
 
+class Simulation:
 
     def __init__(self, sim_name):
         self.proj_dir = glb.proj_path

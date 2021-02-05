@@ -6,7 +6,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-
 def plot_error_u_xy(error_obj):
     plt.clf()
     plt.tick_params(direction="in")
