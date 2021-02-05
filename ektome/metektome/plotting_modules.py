@@ -4,62 +4,9 @@ import pandas as pd
 import numpy as np
 import os, sys
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as mpe
-import matplotlib as mpl
 
-import seaborn as sns
 import ektome.globals as glb
 import ektome.metektome.osteo as o
-
-# plt.rc('text', usetex=True)
-plt.rc("font", family="Times New Roman")
-
-from scipy.constants import golden_ratio
-
-
-def get_fig_size(width=7, scale=1.0):
-    # width = 3.36 # 242 pt
-    base_size = np.array([1, 1 / scale / golden_ratio])
-    fig_size = width * base_size
-    return fig_size
-
-
-sns.set_context("paper")
-sns.set_style(style="whitegrid", rc=None)
-
-mpl.rcParams["figure.dpi"] = 600
-mpl.rcParams["figure.figsize"] = get_fig_size()
-# mpl.rcParams['text.usetex'] = True
-mpl.rc("font", **{"family": "serif", "serif": ["Times New Roman"]})
-mpl.rcParams["lines.linewidth"] = 1.5
-mpl.rcParams["axes.labelsize"] = 16
-mpl.rcParams["xtick.labelsize"] = 13
-mpl.rcParams["ytick.labelsize"] = 13
-mpl.rcParams["legend.fontsize"] = 13
-mpl.rcParams["image.cmap"] = "jet"
-
-# Palette : https://coolors.co
-{
-    "Claret": "8b1e3f",
-    "Dark Purple": "3c153b",
-    "Eton Blue": "89bd9e",
-    "Gold Crayola": "f0c987",
-    "Cinnabar": "db4c40",
-}
-{
-    "C1": "8b1e3f",
-    "C2": "3c153b",
-    "C3": "89bd9e",
-    "C4": "f0c987",
-    "C5": "db4c40",
-}
-
-# Path effects to define different borders around the detectors.
-pe = [
-    mpe.Stroke(linewidth=3, foreground="black"),
-    mpe.Stroke(foreground="white", alpha=1),
-    mpe.Normal(),
-]
 
 
 def plot_error_u_xy(error_obj):

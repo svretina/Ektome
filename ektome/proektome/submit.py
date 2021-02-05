@@ -176,8 +176,8 @@ def submit(simulation):
     excision_parfile.write_parfile()
 
     # Create submition files
-    vnl_sub = csf.create_sub_dict(simulation, vanilla_base_name)
-    exc_sub = csf.create_sub_dict(simulation, excision_base_name)
+    vnl_sub = csf.create_sub_dict(vanilla_base_name)
+    exc_sub = csf.create_sub_dict(excision_base_name)
 
     # Create the simulation output directories
     vanilla_sim_dir = create_sim_dir(vanilla_base_name)

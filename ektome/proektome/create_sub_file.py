@@ -24,7 +24,7 @@ The functions available are:
 import ektome.globals as glb
 
 
-def create_sub_dict(simulation, base_name):
+def create_sub_dict(base_name):
     """Writes the submition file.
 
     :param simulation: Dictionary containing simulation info.

@@ -88,7 +88,7 @@ class Simulation:
         self.psimax_ind, self.psimax = self.find_max("my_psi")
 
     @staticmethod
-    def get_line(self, string, fl):
+    def get_line(string, fl):
         file = open(fl, "r")
         for line in file:
             if re.search(string, line):
@@ -98,7 +98,7 @@ class Simulation:
         return tmp
 
     @staticmethod
-    def get_nvalue(self, line):
+    def get_nvalue(line):
         val = line.split("=")[1]
         return float(val)
 

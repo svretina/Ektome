@@ -24,7 +24,7 @@ The functions available are:
 """
 
 import configparser as cfg
-import os
+import os, sys
 
 # from itertools import product
 import numpy as np
