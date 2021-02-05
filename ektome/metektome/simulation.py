@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kuibit.simdir import SimDir
 import ektome.globals as glb
-
+import re
 
 class Simulation:
     def __init__(self, sim_name):

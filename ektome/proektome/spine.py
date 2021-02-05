@@ -24,9 +24,8 @@ The functions available are:
 """
 
 import configparser as cfg
-import os, sys
-
-# from itertools import product
+import os
+import sys
 import numpy as np
 import ektome.proektome.submit as sb
 import ektome.globals as glb
@@ -64,36 +63,36 @@ def create_dirs():
     it creates them.
     """
 
-    if not os.path.exists(glb.proj_path + "/simulations"):
-        os.mkdir(project_path + "/simulations")
+    if not os.path.exists(f"{glb.proj_path}/simulations"):
+        os.mkdir(f"{glb.proj_path}/simulations")
     else:
         pass
-    # if not os.path.exists(project_path + "/subfiles"):
-    #     os.mkdir(project_path + "/subfiles")
+    # if not os.path.exists(f"{glb.proj_path}/subfiles"):
+    #     os.mkdir(f"{glb.proj_path}/subfiles")
     # else:
     #     pass
-    if not os.path.exists(glb.proj_path + "/parfiles"):
-        os.mkdir(project_path + "/parfiles")
+    if not os.path.exists(f"{glb.proj_path}/parfiles"):
+        os.mkdir(f"{glb.proj_path}/parfiles")
     else:
         pass
-    if not os.path.exists(glb.proj_path + "/results"):
+    if not os.path.exists(f"{glb.proj_path}/results"):
         os.mkdir(project_path + "/results")
     else:
         pass
-    if not os.path.exists(glb.proj_path + "/results/figures"):
-        os.mkdir(glb.proj_path + "/results/figures")
+    if not os.path.exists(f"{glb.proj_path}/results/figures"):
+        os.mkdir(f"{glb.proj_path}/results/figures")
     else:
         pass
-    if not os.path.exists(glb.proj_path + "/results/figures/u"):
-        os.mkdir(glb.proj_path + "/results/figures/u")
+    if not os.path.exists(f"{glb.proj_path}/results/figures/u"):
+        os.mkdir(f"{glb.proj_path}/results/figures/u")
     else:
         pass
-    if not os.path.exists(glb.proj_path + "/results/figures/psi"):
-        os.mkdir(glb.proj_path + "/results/figures/psi")
+    if not os.path.exists(f"{glb.proj_path}/results/figures/psi"):
+        os.mkdir(f"{glb.proj_path}/results/figures/psi")
     else:
         pass
-    if not os.path.exists(glb.proj_path + "/results/figures/error"):
-        os.mkdir(glb.proj_path + "/results/figures/error")
+    if not os.path.exists(f"{glb.proj_path}/results/figures/error"):
+        os.mkdir(f"{glb.proj_path}/results/figures/error")
     else:
         pass
 
