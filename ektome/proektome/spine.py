@@ -76,7 +76,7 @@ def create_dirs():
     else:
         pass
     if not os.path.exists(f"{glb.proj_path}/results"):
-        os.mkdir(project_path + "/results")
+        os.mkdir(f"{glb.proj_path}/results")
     else:
         pass
     if not os.path.exists(f"{glb.proj_path}/results/figures"):
