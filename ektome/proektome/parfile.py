@@ -445,7 +445,7 @@ IOHDF5::out2D_vars              = "
             (center1, center2), outer_boundary=self.outer_boundary
         )
         grid_synced = pg.set_dt_max_grid(grid_not_synced, dt_max=1)
-        print(grid_synced.parfile_code)
+        # print(grid_synced.parfile_code)
         self.grid_section = grid_synced.parfile_code
 
     def _calculate_outer_boundary(self):

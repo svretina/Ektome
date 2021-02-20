@@ -1,84 +1,96 @@
 #!/usr/bin/env python3
 
-import pandas as pd
 import numpy as np
+import numpy.ma as ma
+import pandas as pd
 import matplotlib.pyplot as plt
-
 import ektome.metektome.simulation as sim
 
 
 class Error:
     def __init__(self, vnl_sim_name):
         self.sim_name1 = vnl_sim_name
-        self.sim_name2 = "excision" + vnl_sim_name.split("vanilla")[1]
+        self.sim_name2 = f"excision{vnl_sim_name.split('vanilla')[1]}"
 
         self.vanilla = sim.Simulation(self.sim_name1)
         self.excision = sim.Simulation(self.sim_name2)
-        self.proj_dir = self.vanilla.proj_dir
-        self.error_u = abs(self.vanilla.umesh - self.excision.umesh)
-        self.error_u_masked = abs(
-            self.vanilla.umesh_masked - self.excision.umesh_masked
-        )
 
-        self.error_psi = abs(self.vanilla.psimesh - self.excision.psimesh)
-        self.error_psi_masked = abs(
-            self.vanilla.psimesh_masked - self.excision.psimesh_masked
-        )
+        # self._calculate_error_u()
+        self._calculate_error_psi()
+        self._calculate_error_psi_theoretical()
 
-        self.xmin = self.vanilla.xmin
-        self.xmax = self.vanilla.xmax
-        self.ymin = self.vanilla.ymin
-        self.ymax = self.vanilla.ymax
         self.ex_r = self.excision.ex_r
-        (
-            self.indu,
-            self.x_at_umax,
-            self.y_at_umax,
-            self.umax,
-            self.umaxangle,
-        ) = self.find_max("puncture_u")
-        (
-            self.indpsi,
-            self.x_at_psimax,
-            self.y_at_psimax,
-            self.psimax,
-            self.psimaxangle,
-        ) = self.find_max("my_psi")
-        self.figure_dir = self.vanilla.figure_dir
+        self.psimax = self.calculate_max_with_mask(self.error_psi)
+        self.psimaxt = self.calculate_max_with_mask(self.error_psi_t)
+        # self.umax = self.calculate_max_with_mask(self.error_u)
 
-        self.base_name = self.vanilla.base_name
+    def _circle(self,x,y):
+        return (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y
 
-    def find_max(self, param):
-        if param == "puncture_u":
-            # print("puncture_u")
-            var = self.error_u_masked.copy()
-        elif param == "my_psi":
-            # print("psi")
-            var = self.error_psi_masked.copy()
+    def _calculate_error_u(self):
+        if ((self.vanilla.p1 == 0 ) &
+            (self.vanilla.p2 == 0 ) &
+            (self.vanilla.s1 == 0 ) &
+            (self.vanilla.s2 == 0 )):
+            self.error_u = self.excision.u
         else:
-            raise TypeError(
-                "Invalid choice of parameter\
-            in find max"
-            )
+            self.error_u = abs(self.vanilla.u - self.excision.u)\
+                /self.vanilla.u
 
-        ind = np.unravel_index(np.nanargmax(var, axis=None), var.shape)
+    def _calculate_error_psi(self):
+        self.error_psi = abs(self.vanilla.psi
+                             - self.excision.psi)\
+                             /self.vanilla.psi
 
-        angle = np.arctan2(self.excision.ymesh[ind], self.excision.xmesh[ind])
-        return (
-            ind,
-            self.vanilla.xmesh[ind],
-            self.vanilla.ymesh[ind],
-            var[ind],
-            angle,
-        )
+    def _calculate_error_psi_theoretical(self):
+        temp = self.vanilla.mp / (4.0 * self.vanilla.par_b
+                                  - self.vanilla.mp )
+        self.error_psi_t = temp/self.vanilla.psi
+
+    def _calculate_error_norm_with_mask(self):
+        for ref_level, comp_index, unif_grid in self.error_psi:
+            x, y = unif_grid.coordinates_from_grid()
+            mask = np.ones(unif_grid.data.shape)
+            for j in range(y.shape[0]):
+                for i in range(x.shape[0]):
+                    if x[i] > 0:
+                        mask[i,j] = np.nan
+                        continue
+                    if self._circle(x[i],y[j]) < (self.ex_r**2):
+                        mask[i,j] = np.nan
+            data = mask * unif_grid.data
+            data = data[~np.isnan(data)]
+            data = data.reshape(-1)
+            norm = np.linalg.norm(data)/np.sqrt(len(data))
+            # plt.hist(data, bins=len(data))
+            # plt.savefig("hist.png")
+        return norm
+
+
+    def calculate_max_with_mask(self, var):
+        maxs = []
+        for ref_level, comp_index, unif_grid in var:
+            x, y = unif_grid.coordinates_from_grid()
+            mask = np.ones(unif_grid.data.shape)
+            for j in range(y.shape[0]):
+                for i in range(x.shape[0]):
+                    if x[i] > 0:
+                        mask[i,j] = np.nan
+                        continue
+                    if self._circle(x[i],y[j]) < (self.ex_r**2):
+                        mask[i,j] = np.nan
+
+            data = mask * unif_grid.data
+            if not np.isnan(data).all():
+                maxs.append(np.nanmax(data))
+        return np.nanmax(maxs)
 
     def error_report(self):
         error_dict = {
-            "x": self.x_at_psimax,
-            "y": self.y_at_psimax,
             "q": self.vanilla.mp,
             "b": self.vanilla.par_b,
-            "ex_r": self.ex_r,  # 1st BH
+            "ex_r": self.ex_r,
+            # 1st BH
             "p1x": self.vanilla.p1x,
             "p1y": self.vanilla.p1y,
             "p1z": self.vanilla.p1z,
@@ -96,120 +108,7 @@ class Error:
             "s2y": self.vanilla.s2y,
             "s2z": self.vanilla.s2z,
             "s2": self.vanilla.s2,
-            "angle": self.psimaxangle,
             "max_error_psi": self.psimax,
+            "max_error_psi_theoretical": self.psimaxt
         }
         return pd.DataFrame.from_dict([error_dict])
-
-    def plot_error_u_xy(self):
-        plt.clf()
-        plt.tick_params(direction="in")
-        im = plt.imshow(
-            self.error_u,
-            interpolation="spline36",
-            cmap="inferno_r",
-            origin="lower",
-            extent=[self.xmin, self.xmax, self.ymin, self.ymax],
-            vmin=abs(self.error_u).min(),
-            vmax=abs(self.error_u).max(),
-        )
-        # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-        plt.scatter(
-            [-self.vanilla.par_b, self.vanilla.par_b],
-            [0, 0],
-            color="black",
-            marker="x",
-        )
-
-        excision_sphere = plt.Circle(
-            (-self.excision.par_b, 0),
-            self.excision.ex_r,
-            color="black",
-            fill=False,
-            ls="--",
-        )
-
-        rs_radius1 = plt.Circle(
-            (-self.excision.par_b, 0),
-            self.vanilla.mm / 2,
-            color="black",
-            fill=False,
-        )
-
-        rs_radius2 = plt.Circle(
-            (self.excision.par_b, 0),
-            self.vanilla.mp / 2,
-            color="black",
-            fill=False,
-        )
-
-        plt.gcf().gca().add_artist(excision_sphere)
-        plt.gcf().gca().add_artist(rs_radius1)
-        plt.gcf().gca().add_artist(rs_radius2)
-
-        plt.scatter([self.x_at_umax], [self.y_at_umax], color="green", marker="+")
-
-        plt.xlim(self.vanilla.xmin, self.vanilla.xmax)
-        plt.ylim(self.vanilla.ymin, self.vanilla.ymax)
-        plt.xlabel("x/M")
-        plt.ylabel("y/M")
-        plt.title(r"Error_u with Excision Radius: %.2f" % self.ex_r)
-        plt.colorbar(im, orientation="horizontal")
-        plt.savefig("%s-error-u.png" % self.vanilla.sim_dir)
-        plt.savefig("%s-error-u.png" % self.excision.sim_dir)
-
-    def plot_error_psi_xy(self):
-        plt.clf()
-        plt.tick_params(direction="in")
-        im = plt.imshow(
-            self.error_psi,
-            interpolation="spline36",
-            cmap="inferno_r",
-            origin="lower",
-            extent=[self.xmin, self.xmax, self.ymin, self.ymax],
-            vmin=abs(self.error_psi).min(),
-            vmax=abs(self.error_psi).max(),
-        )
-        # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-        plt.scatter(
-            [-self.vanilla.par_b, self.vanilla.par_b],
-            [0, 0],
-            color="black",
-            marker="x",
-        )
-        excision_sphere = plt.Circle(
-            (-self.excision.par_b, 0),
-            self.excision.ex_r,
-            color="black",
-            fill=False,
-            ls="--",
-        )
-
-        rs_radius1 = plt.Circle(
-            (-self.excision.par_b, 0),
-            self.vanilla.mm / 2,
-            color="black",
-            fill=False,
-        )
-
-        rs_radius2 = plt.Circle(
-            (self.excision.par_b, 0),
-            self.vanilla.mp / 2,
-            color="black",
-            fill=False,
-        )
-
-        plt.gcf().gca().add_artist(excision_sphere)
-        plt.gcf().gca().add_artist(rs_radius1)
-        plt.gcf().gca().add_artist(rs_radius2)
-
-        plt.scatter([self.x_at_psimax], [self.y_at_psimax], color="red", marker="+")
-
-        plt.xlim(self.vanilla.xmin, self.vanilla.xmax)
-        plt.ylim(self.vanilla.ymin, self.vanilla.ymax)
-        plt.xlabel("x/M")
-        plt.ylabel("y/M")
-        plt.title(r"Error_$\psi$ with Excision Radius: %.2f" % self.ex_r)
-        plt.colorbar(im, orientation="horizontal")
-        plt.savefig("%s-error-psi.png" % self.vanilla.sim_dir)
-        plt.savefig("%s-error-psi.png" % self.excision.sim_dir)

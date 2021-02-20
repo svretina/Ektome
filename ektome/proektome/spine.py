@@ -245,7 +245,6 @@ def create_simulation_dict_and_submit(cfg_arr):
                                                                     submit_simulation(
                                                                         simulation
                                                                     )
-                                                                    sys.exit()
                                                                     counter = (
                                                                         counter + 1
                                                                     )

@@ -45,12 +45,14 @@ def create_base_names(simulation):
     :rtype: str
 
     """
+    # renaming "para_b" to "b" for the base_name
+    d = {"b" if k == "par_b" else k:v for k,v in simulation.items()}
     tmp = []
-    for i in simulation:
-        if (simulation[i] - int(simulation[i])) == 0.0:
-            tmp.append(f"_{i}{int(simulation[i])}")
+    for i in d:
+        if (d[i] - int(d[i])) == 0.0:
+            tmp.append(f"_{i}{int(d[i])}")
         else:
-            tmp.append(f"_{i}{simulation[i]}")
+            tmp.append(f"_{i}{d[i]}")
 
     suffix = "".join(tmp)
     vnl_name = f"vanilla{suffix}"
@@ -88,7 +90,7 @@ def submit_simulation(sub_file_dict):
             cluster_id = job.queue(txn)
             time.sleep(0.1)
             return cluster_id
-        except RuntimeError:
+        except RuntimeError or htcondor.HTCondorIOError:
             print("==============================")
             print("Simulation Submittion FAILED")
             print(sub_file_dict)
@@ -183,9 +185,14 @@ def submit(simulation):
     vanilla_sim_dir = create_sim_dir(vanilla_base_name)
     excision_sim_dir = create_sim_dir(excision_base_name)
 
+    print("Submiting simulations for:")
+    print(vanilla_base_name.split("vanilla_")[1])
+    print(30*"==")
+
     # Submit the simulations
     vnl_id = submit_simulation(vnl_sub)
     exc_id = submit_simulation(exc_sub)
+
 
     write_submit_metadata(vnl_id, vanilla_base_name)
     write_submit_metadata(exc_id, excision_base_name)
