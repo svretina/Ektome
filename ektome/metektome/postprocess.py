@@ -51,7 +51,7 @@ def get_folders(recalc=False):
     vanilla_folders = [x for x in sim_folders if x.startswith("vanilla")]
     if recalc:
         unfinished = get_unfinished_sims(vanilla_folders)
-        if not len(unfinished):
+        if not unfinished:
             exclude_folders = []
             folders = vanilla_folders
         else:
@@ -61,7 +61,7 @@ def get_folders(recalc=False):
     else:
         processed = get_processed_sims(vanilla_folders)
         unfinished = get_unfinished_sims(vanilla_folders)
-        if not len(processed) and not len(unfinished):
+        if not processed and not unfinished:
             exclude_folders = []
             folders = vanilla_folders
         else:

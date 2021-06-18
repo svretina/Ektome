@@ -105,7 +105,8 @@ class Binary:
         vel2 = np.round(ke2.xyzVel(0.0), 2)
         return semi_major, vel1, vel2
 
-    def quasicircular_inspiral(self, q, distance, spin_minus, spin_plus):
+    @staticmethod
+    def quasicircular_inspiral(q, distance, spin_minus, spin_plus):
         twopunctures = prepare_quasicircular_inspiral(q,
                                                       distance,
                                                       1+q,
