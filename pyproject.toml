@@ -12,6 +12,7 @@ configparser = "^5.0.1"
 kuibit = "^1.0.0-beta.0"
 pandas = "^1.2.1"
 matplotlib = "^3.3.4"
+PyAstronomy = "^0.15.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

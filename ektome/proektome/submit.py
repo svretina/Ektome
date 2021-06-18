@@ -30,34 +30,10 @@ import os
 import time
 import numpy as np
 import htcondor as htc
+from htcondor import HTCondorIOError as htc_error
 import ektome.globals as glb
 import ektome.proektome.parfile as p
 import ektome.proektome.create_sub_file as csf
-
-
-def create_base_names(simulation):
-    """Creates a name which serves as a base to name various
-    output files and directories.
-
-    :param simulation: Dictionary containing simulation info
-    :type simulation: dict
-    :returns: Base names for vanilla and excision case.
-    :rtype: str
-
-    """
-    # renaming "para_b" to "b" for the base_name
-    d = {"b" if k == "par_b" else k:v for k,v in simulation.items()}
-    tmp = []
-    for i in d:
-        if (d[i] - int(d[i])) == 0.0:
-            tmp.append(f"_{i}{int(d[i])}")
-        else:
-            tmp.append(f"_{i}{d[i]}")
-
-    suffix = "".join(tmp)
-    vnl_name = f"vanilla{suffix}"
-    exc_name = f"excision{suffix}"
-    return vnl_name, exc_name
 
 
 def create_sim_dir(base_name):
@@ -69,7 +45,6 @@ def create_sim_dir(base_name):
     :rtype: str
     """
     dir_name = f"{glb.simulations_path}/{base_name}"
-
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
     else:
@@ -82,60 +57,22 @@ def submit_simulation(sub_file_dict):
 
     :param sub_file_path: Path to the submition file
     :type sub_file_path: str
+    :returns: Cluster ID number
+    :rtype: int
     """
     job = htc.Submit(sub_file_dict)
     schedd = htc.Schedd()
-    with schedd.transaction() as txn:
+    cluster_id = 0
+    sucess = False
+    while not sucess:
         try:
-            cluster_id = job.queue(txn)
-            time.sleep(0.1)
-            return cluster_id
-        except RuntimeError or htcondor.HTCondorIOError:
-            print("==============================")
-            print("Simulation Submittion FAILED")
-            print(sub_file_dict)
-            print("==============================")
-            return 0
-
-
-def norm(x, y, z):
-    return np.sqrt(x * x + y * y + z * z)
-
-
-def calculate_momentum(simulation):
-    """Calculates the norm of the momentum vector for the simulation.
-
-    :param simulation: Dictionary containing simulation info
-    :type simulation: dict
-    :returns: The norm value
-    :rtype: np.float
-    """
-    px1 = simulation["px1"]
-    py1 = simulation["py1"]
-    pz1 = simulation["pz1"]
-
-    px2 = simulation["px2"]
-    py2 = simulation["py2"]
-    pz2 = simulation["pz2"]
-    return norm(px1, py1, pz1), norm(px2, py2, pz2)
-
-
-def calculate_spin(simulation):
-    """Calculates the norm of the effective spin for the simulation.
-
-    :param simulation: Dictionary containing simulation info
-    :type simulation: dict
-    :returns: The norm value
-    :rtype: np.float
-    """
-    sx1 = simulation["sx1"]
-    sy1 = simulation["sy1"]
-    sz1 = simulation["sz1"]
-
-    sx2 = simulation["sx2"]
-    sy2 = simulation["sy2"]
-    sz2 = simulation["sz2"]
-    return norm(sx1, sy1, sz1), norm(sx2, sy2, sz2)
+            with schedd.transaction() as txn:
+                cluster_id = job.queue(txn)
+                sucess = True
+        except:
+            sucess = False
+            print("FAILED")
+    return cluster_id
 
 
 def write_submit_metadata(cluster_id, base_name):
@@ -150,6 +87,39 @@ def write_submit_metadata(cluster_id, base_name):
     with open(glb.metadata_path, "a") as metadata:
         metadata.write(f"{base_name},{cluster_id}\n")
 
+def get_info_from_folder_name(folder_name):
+    # excision_q100_b639_sx1-0.1_sy1-0.9_sz1-0.1_sx20.1_sy20.1_sz20.9
+    pieces = folder_name.split("_")
+    d = {}
+    d["q"] = int(pieces[1][1:])
+    d["exr"] = int(d["q"]/2)
+    d["sx1"] = float(pieces[3][3:])
+    d["sy1"] = float(pieces[4][3:])
+    d["sz1"] = float(pieces[5][3:])
+    d["sx2"] = float(pieces[6][3:])
+    d["sy2"] = float(pieces[7][3:])
+    d["sz2"] = float(pieces[8][3:])
+    return d
+
+
+def check_output_dir(dir1):
+    if not os.path.exists(dir1):
+        create_sim_dir(dir1)
+
+def check_existence_simulation(simulation_folder_name):
+    """Checks if a simulation already exists and is finished.
+    :param simulation_folder_name: Name of the simulation folder
+    :type simulation_folder_name: str
+    :returns: Boolean
+    :rtype: bool
+    """
+    folder_path = f"{glb.simulations_path}/{simulation_folder_name}"
+    file_path = f"{folder_path}/twopunctures.xyz.h5"
+    if os.path.exists(file_path):
+        return True
+    else:
+        return False
+
 
 def submit(simulation):
     """Main submit function. Creates parameter and submition files
@@ -158,42 +128,36 @@ def submit(simulation):
     :param simulation: Dictionary containing simulation info
     :type simulation: dict
     """
-    s1, s2 = calculate_spin(simulation)
-    p1, p2 = calculate_momentum(simulation)
-
-    if (s1 > 1) or (s2 > 1):
-        print("Spin > 1")
-        return 1
-    if (p1 > 1) or (p2 > 1):
-        print("Momentum > 1")
-        return 1
-
-    vanilla_base_name, excision_base_name = create_base_names(simulation)
-
-    # Create parameter files
-    vanilla_parfile = p.Parameter_File(simulation, vanilla_base_name, 1)
-    vanilla_parfile.write_parfile()
-
-    excision_parfile = p.Parameter_File(simulation, excision_base_name, 1)
-    excision_parfile.write_parfile()
-
-    # Create submition files
-    vnl_sub = csf.create_sub_dict(vanilla_base_name)
-    exc_sub = csf.create_sub_dict(excision_base_name)
-
-    # Create the simulation output directories
-    vanilla_sim_dir = create_sim_dir(vanilla_base_name)
-    excision_sim_dir = create_sim_dir(excision_base_name)
-
+    vanilla_base_name = simulation.vanilla_base_name
+    excision_base_name = simulation.excision_base_name
+    submit = True
     print("Submiting simulations for:")
     print(vanilla_base_name.split("vanilla_")[1])
     print(30*"==")
 
-    # Submit the simulations
-    vnl_id = submit_simulation(vnl_sub)
-    exc_id = submit_simulation(exc_sub)
+    if not check_existence_simulation(vanilla_base_name):
+        vanilla_parfile = p.Parameter_File(simulation,
+                                       excision=False, N=1)
+        vanilla_parfile.write_parfile()
+        vnl_sub = csf.create_sub_dict(vanilla_base_name)
+        vanilla_sim_dir = create_sim_dir(vanilla_base_name)
+        check_output_dir(vanilla_sim_dir)
+        if submit:
+            vnl_id = submit_simulation(vnl_sub)
+            write_submit_metadata(vnl_id, vanilla_base_name)
 
 
-    write_submit_metadata(vnl_id, vanilla_base_name)
-    write_submit_metadata(exc_id, excision_base_name)
+    excision_parfile = p.Parameter_File(simulation,
+                                        excision=True, N=1)
+
+    excision_parfile.write_parfile()
+
+    exc_sub = csf.create_sub_dict(excision_base_name)
+    excision_sim_dir = create_sim_dir(excision_base_name)
+    check_output_dir(excision_sim_dir)
+
+    if submit:
+        exc_id = submit_simulation(exc_sub)
+        write_submit_metadata(exc_id, excision_base_name)
+
     return 0

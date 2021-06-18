@@ -17,7 +17,9 @@
 
 
 from string import Template
-from precactus import grid as pg
+# from precactus import grid as pg
+from jhuki import grid as pg
+from jhuki.twopunctures import TwoPunctures
 import numpy as np
 import ektome.globals as glb
 
@@ -70,7 +72,6 @@ CarpetLib::output_bboxes  = no
 
 # Carpet::max_refinement_levels = 10
 
-driver::ghost_size       = 3
 Carpet::use_buffer_zones = yes
 
 Carpet::prolongation_order_space = 5
@@ -91,19 +92,8 @@ CarpetLib::print_memstats_every  = 5120
 
 ActiveThorns = "NaNChecker"
 NaNChecker::check_every     = 1 # 512
-#NaNChecker::verbose         = "all"
 NaNChecker::action_if_found = "just warn"
-#NaNChecker::action_if_found = "terminate"
 NaNChecker::check_vars      = "
-        # ML_BSSN::ML_log_confac
-        # ML_BSSN::ML_metric
-        # ML_BSSN::ML_trace_curv
-        # ML_BSSN::ML_curv
-        # ML_BSSN::ML_Gamma
-        # ML_BSSN::ML_lapse
-        # ML_BSSN::ML_shift
-        # ML_BSSN::ML_dtlapse
-        # ML_BSSN::ML_dtshift
         ADMBase::metric
         ADMBase::curv
         ADMBase::lapse
@@ -113,12 +103,13 @@ NaNChecker::check_vars      = "
 "
 ActiveThorns = "Boundary CartGrid3D CoordBase SymBase ReflectionSymmetry CarpetRegrid2"
 
-CoordBase::boundary_size_x_lower     = 3
-CoordBase::boundary_size_y_lower     = 3
-CoordBase::boundary_size_z_lower     = 3
-CoordBase::boundary_size_x_upper     = 3
-CoordBase::boundary_size_y_upper     = 3
-CoordBase::boundary_size_z_upper     = 3
+# driver::ghost_size       = 3
+# CoordBase::boundary_size_x_lower     = 3
+# CoordBase::boundary_size_y_lower     = 3
+# CoordBase::boundary_size_z_lower     = 3
+# CoordBase::boundary_size_x_upper     = 3
+# CoordBase::boundary_size_y_upper     = 3
+# CoordBase::boundary_size_z_upper     = 3
 
 ReflectionSymmetry::reflection_x = "no"
 ReflectionSymmetry::reflection_y = "no"
@@ -132,7 +123,6 @@ ReflectionSymmetry::avoid_origin_z = "no"
 #CoordBase::boundary_shiftout_x_lower = 1
 CoordBase::boundary_shiftout_z_lower = 1
 
-# CartGrid3D::type = "coordbase"
 
 $grid_section
 
@@ -158,38 +148,10 @@ ADMBase::shift_timelevels = 3
 ADMBase::metric_timelevels = 3
 
 ADMBase::metric_type = "physical"
-
-ADMBase::initial_data    = "twopunctures"
-ADMBase::initial_lapse   = "twopunctures-averaged"
-ADMBase::initial_shift   = "zero"
-ADMBase::initial_dtlapse = "zero"
-ADMBase::initial_dtshift = "zero"
-
-# needed for AHFinderDirect
-
-TwoPunctures::par_b          = $par_b
-TwoPunctures::par_m_plus     = $m_plus
-TwoPunctures::par_m_minus    = $m_minus
-
-TwoPunctures::par_P_plus [0] = $px_plus
-TwoPunctures::par_P_plus [1] = $py_plus
-TwoPunctures::par_P_plus [2] = $pz_plus
-
-TwoPunctures::par_P_minus[0] = $px_minus
-TwoPunctures::par_P_minus[1] = $py_minus
-TwoPunctures::par_P_minus[2] = $pz_minus
-
-
-TwoPunctures::par_S_plus [0] = $sx_plus
-TwoPunctures::par_S_plus [1] = $sy_plus
-TwoPunctures::par_S_plus [2] = $sz_plus
-
-TwoPunctures::par_S_minus[0] = $sx_minus
-TwoPunctures::par_S_minus[1] = $sy_minus
-TwoPunctures::par_S_minus[2] = $sz_minus
+$initial_data_section
 
 TwoPunctures::keep_u_around  = yes
-TwoPunctures::excision_radius= $ex_r
+TwoPunctures::excision_radius= $exr
 TwoPunctures::TP_epsilon     = 1.0e-2
 TwoPunctures::TP_Tiny        = 1.0e-2
 TwoPunctures::verbose        = yes
@@ -197,8 +159,8 @@ TwoPunctures::grid_setup_method = evaluation
 TwoPunctures::npoints_A      = 60
 TwoPunctures::npoints_B      = 60
 TwoPunctures::npoints_phi    = 32
-TwoPunctures::Newton_maxit   = 10
-
+TwoPunctures::newton_maxit   = 15
+TwoPunctures::newton_tol     = 1e-18
 
 ActiveThorns = "CarpetIOBasic"
 
@@ -214,29 +176,29 @@ ActiveThorns = "CarpetIOScalar"
 
 IOScalar::one_file_per_group = yes
 
-IOScalar::outScalar_every = 128
-IOScalar::outScalar_vars  = "
-        CarpetReduce::weight
-        # ADMBase::metric
-        # ADMBase::curv
-        # ADMBase::lapse
-        # ADMBase::shift
-        # ADMBase::dtlapse
-        # ADMBase::dtshift
-        # WEYLSCAL4::Psi4r
-        # WEYLSCAL4::Psi4i
-        # ML_ADMConstraints::ML_Ham
-        # ML_ADMConstraints::ML_mom
-        # SphericalSurface::sf_radius
-        # QuasiLocalMeasures::qlm_newman_penrose
-        # QuasiLocalMeasures::qlm_weyl_scalars
-        # QuasiLocalMeasures::qlm_ricci_scalars
-        # QuasiLocalMeasures::qlm_twometric
-        # QuasiLocalMeasures::qlm_killing_vector
-        # QuasiLocalMeasures::qlm_killed_twometric
-        # QuasiLocalMeasures::qlm_invariant_coordinates
-        # QuasiLocalMeasures::qlm_3determinant
-"
+# IOScalar::outScalar_every = 128
+# IOScalar::outScalar_vars  = "
+#     # CarpetReduce::weight
+#     # ADMBase::metric
+#     # ADMBase::curv
+#     # ADMBase::lapse
+#     # ADMBase::shift
+#     # ADMBase::dtlapse
+#     # ADMBase::dtshift
+#     # WEYLSCAL4::Psi4r
+#     # WEYLSCAL4::Psi4i
+#     # ML_ADMConstraints::ML_Ham
+#     # ML_ADMConstraints::ML_mom
+#     # SphericalSurface::sf_radius
+#     # QuasiLocalMeasures::qlm_newman_penrose
+#     # QuasiLocalMeasures::qlm_weyl_scalars
+#     # QuasiLocalMeasures::qlm_ricci_scalars
+#     # QuasiLocalMeasures::qlm_twometric
+#     # QuasiLocalMeasures::qlm_killing_vector
+#     # QuasiLocalMeasures::qlm_killed_twometric
+#     # QuasiLocalMeasures::qlm_invariant_coordinates
+#     # QuasiLocalMeasures::qlm_3determinant
+# "
 ActiveThorns = "CarpetIOASCII"
 
 IOASCII::one_file_per_group = yes
@@ -244,63 +206,63 @@ IOASCII::one_file_per_group = yes
 IOASCII::output_symmetry_points = no
 IOASCII::out3D_ghosts           = no
 
-IOASCII::out0D_every = 128
-IOASCII::out0D_vars  = "
-        Carpet::timing
-        # CarpetReduce::weight
-        # ADMBase::metric
-        # ADMBase::curv
-        # ADMBase::lapse
-        # ADMBase::shift
-        # ADMBase::dtlapse
-        # ADMBase::dtshift
-        # WEYLSCAL4::Psi4r
-        # WEYLSCAL4::Psi4i
-        # ML_ADMConstraints::ML_Ham
-        # ML_ADMConstraints::ML_mom
-        # SphericalSurface::sf_active
-        # SphericalSurface::sf_valid
-        # SphericalSurface::sf_info
-        # SphericalSurface::sf_radius
-        # SphericalSurface::sf_origin
-        # SphericalSurface::sf_coordinate_descriptors
-        # QuasiLocalMeasures::qlm_state
-        # QuasiLocalMeasures::qlm_grid_int
-        # QuasiLocalMeasures::qlm_grid_real
-        # QuasiLocalMeasures::qlm_scalars
-        # QuasiLocalMeasures::qlm_multipole_moments
-"
+# IOASCII::out0D_every = 128
+# IOASCII::out0D_vars  = "
+#     # Carpet::timing
+#     # CarpetReduce::weight
+#     # ADMBase::metric
+#     # ADMBase::curv
+#     # ADMBase::lapse
+#     # ADMBase::shift
+#     # ADMBase::dtlapse
+#     # ADMBase::dtshift
+#     # WEYLSCAL4::Psi4r
+#     # WEYLSCAL4::Psi4i
+#     # ML_ADMConstraints::ML_Ham
+#     # ML_ADMConstraints::ML_mom
+#     # SphericalSurface::sf_active
+#     # SphericalSurface::sf_valid
+#     # SphericalSurface::sf_info
+#     # SphericalSurface::sf_radius
+#     # SphericalSurface::sf_origin
+#     # SphericalSurface::sf_coordinate_descriptors
+#     # QuasiLocalMeasures::qlm_state
+#     # QuasiLocalMeasures::qlm_grid_int
+#     # QuasiLocalMeasures::qlm_grid_real
+#     # QuasiLocalMeasures::qlm_scalars
+#     # QuasiLocalMeasures::qlm_multipole_moments
+# "
 
-IOASCII::out1D_every = 128
-IOASCII::out1D_vars  = "
-        CarpetReduce::weight
-        # ADMBase::metric
-        # ADMBase::curv
-        # ADMBase::lapse
-        # ADMBase::shift
-        # ADMBase::dtlapse
-        # ADMBase::dtshift
-        # WEYLSCAL4::Psi4r
-        # WEYLSCAL4::Psi4i
-        # ML_ADMConstraints::ML_Ham
-        # ML_ADMConstraints::ML_mom
-        # SphericalSurface::sf_radius
-        # QuasiLocalMeasures::qlm_shapes
-        # QuasiLocalMeasures::qlm_coordinates
-        # QuasiLocalMeasures::qlm_tetrad_l
-        # QuasiLocalMeasures::qlm_tetrad_n
-        # QuasiLocalMeasures::qlm_tetrad_m
-        # QuasiLocalMeasures::qlm_newman_penrose
-        # QuasiLocalMeasures::qlm_weyl_scalars
-        # QuasiLocalMeasures::qlm_ricci_scalars
-        # QuasiLocalMeasures::qlm_twometric
-        # QuasiLocalMeasures::qlm_killing_vector
-        # QuasiLocalMeasures::qlm_killed_twometric
-        # QuasiLocalMeasures::qlm_invariant_coordinates
-        # QuasiLocalMeasures::qlm_3determinant
-	TwoPunctures::puncture_u
-	Twopunctures::my_psi
-"
+# IOASCII::out1D_every = 128
+# IOASCII::out1D_vars  = "
+#     # CarpetReduce::weight
+#     # ADMBase::metric
+#     # ADMBase::curv
+#     # ADMBase::lapse
+#     # ADMBase::shift
+#     # ADMBase::dtlapse
+#     # ADMBase::dtshift
+#     # WEYLSCAL4::Psi4r
+#     # WEYLSCAL4::Psi4i
+#     # ML_ADMConstraints::ML_Ham
+#     # ML_ADMConstraints::ML_mom
+#     # SphericalSurface::sf_radius
+#     # QuasiLocalMeasures::qlm_shapes
+#     # QuasiLocalMeasures::qlm_coordinates
+#     # QuasiLocalMeasures::qlm_tetrad_l
+#     # QuasiLocalMeasures::qlm_tetrad_n
+#     # QuasiLocalMeasures::qlm_tetrad_m
+#     # QuasiLocalMeasures::qlm_newman_penrose
+#     # QuasiLocalMeasures::qlm_weyl_scalars
+#     # QuasiLocalMeasures::qlm_ricci_scalars
+#     # QuasiLocalMeasures::qlm_twometric
+#     # QuasiLocalMeasures::qlm_killing_vector
+#     # QuasiLocalMeasures::qlm_killed_twometric
+#     # QuasiLocalMeasures::qlm_invariant_coordinates
+#     # QuasiLocalMeasures::qlm_3determinant
+#     # TwoPunctures::puncture_u
+#     # Twopunctures::my_psi
+# "
 
 IOASCII::out2D_every = 128
 IOASCII::out2D_vars  = "
@@ -313,25 +275,25 @@ IOASCII::out2D_vars  = "
 
 Activethorns = "CarpetIOHDF5"
 
-IOHDF5::out_every              = 512
+IOHDF5::out_every              = 1
 IOHDF5::one_file_per_group     = yes
 IOHDF5::output_symmetry_points = no
 IOHDF5::out3D_ghosts           = no
 IOHDF5::compression_level      = 1
 IOHDF5::use_checksums          = yes
-IOHDF5::out_vars               = "
-        CarpetReduce::weight
-        # ADMBase::metric
-        # ADMBase::curv
-        # ADMBase::lapse
-        # ADMBase::shift
-        # ADMBase::dtlapse
-        # ADMBase::dtshift
-        # WEYLSCAL4::Psi4r
-        # WEYLSCAL4::Psi4i
-        # ML_ADMConstraints::ML_Ham
-        # ML_ADMConstraints::ML_mom
-"
+# IOHDF5::out_vars               = "
+#         # CarpetReduce::weight
+#         # ADMBase::metric
+#         # ADMBase::curv
+#         # ADMBase::lapse
+#         # ADMBase::shift
+#         # ADMBase::dtlapse
+#         # ADMBase::dtshift
+#         # WEYLSCAL4::Psi4r
+#         # WEYLSCAL4::Psi4i
+#         # ML_ADMConstraints::ML_Ham
+#         # ML_ADMConstraints::ML_mom
+# "
 
 IOHDF5::out2D_every             = 1
 IOHDF5::out2D_xy                = yes
@@ -342,6 +304,12 @@ IOHDF5::out2D_vars              = "
 	TwoPunctures::puncture_u
 	TwoPunctures::my_psi
 "
+IOHDF5::out3D_every             = 1
+IOHDF5::out3D_vars              = "
+	TwoPunctures::puncture_u
+	TwoPunctures::my_psi
+"
+
 # IOHDF5::checkpoint                  = yes
 # IO::checkpoint_dir                  = $sim_dir
 # IO::checkpoint_ID                   = yes
@@ -359,35 +327,49 @@ IOHDF5::out2D_vars              = "
 # TimerReport::n_top_timers               = 20
 """
 
-    def __init__(self, simulation, base_name, N=0):
-        self.q = simulation["q"]
+    def __init__(self, simulation, excision, N=0):
+        """Constructor of Parameter class
+        :param simulation: Dictionary with simulation parameters
+        :type simulation: dict
+        :param base_name: String to name output files
+        :type base_name: str
+        :param N: Number of refinment radii to add from touching
+        limit
+        :type N: int
+        """
+        self.q = simulation.q
         self.N = N
-        self.base_name = base_name
-        self.par_b = simulation["par_b"]
-        self.px_minus = simulation["px1"]
-        self.py_minus = -simulation["py1"]
-        self.pz_minus = -simulation["pz1"]
+        if excision:
+            self.base_name = simulation.excision_base_name
+        else:
+            self.base_name = simulation.vanilla_base_name
 
-        self.sx_minus = simulation["sx1"]
-        self.sy_minus = simulation["sy1"]
-        self.sz_minus = simulation["sz1"]
+        self.par_b = simulation.b
+        # I just pass here the values
+        # they should alreayd account for bound orbits
+        self.px_minus = simulation.px1
+        self.py_minus = simulation.py1
+        self.pz_minus = simulation.pz1
 
-        self.px_plus = -simulation["px2"]
-        self.py_plus = simulation["py2"]
-        self.pz_plus = simulation["pz2"]
+        self.sx_minus = simulation.sx1
+        self.sy_minus = simulation.sy1
+        self.sz_minus = simulation.sz1
 
-        self.sx_plus = simulation["sx2"]
-        self.sy_plus = simulation["sy2"]
-        self.sz_plus = simulation["sz2"]
+        self.px_plus = simulation.px2
+        self.py_plus = simulation.py2
+        self.pz_plus = simulation.pz2
 
-        self.m_plus = simulation["q"]
+        self.sx_plus = simulation.sx2
+        self.sy_plus = simulation.sy2
+        self.sz_plus = simulation.sz2
+
+        self.m_plus = self.q
         self.m_minus = 1.0
 
         if "vanilla" in self.base_name:
-            self.ex_r = 0.0
+            self.exr = 0.0
         else:
-            self.ex_r = simulation["ex_r"]
-
+            self.exr = simulation.exr
         self.dx_plus = self.m_plus / 100
         self.dy_plus = self.m_plus / 100
         self.dz_plus = self.m_plus / 100
@@ -395,7 +377,7 @@ IOHDF5::out2D_vars              = "
         self.dy_minus = self.m_minus / 100
         self.dz_minus = self.m_minus / 100
 
-        self.sim_dir = "/".join((glb.simulations_path, self.base_name))
+        self.sim_dir = f"{glb.simulations_path}/{self.base_name}"
 
         self.EH_minus = glb.min_r
         self.EH_plus = self.m_plus / 2
@@ -404,9 +386,26 @@ IOHDF5::out2D_vars              = "
         self._calculate_N_before_overlap()
         self._calculate_refinement_radii()
         self._calculate_outer_boundary()
+        self._calculate_initial_data_section()
         self._calculate_grid_section()
         self._calculate_parfile_path()
         self._calculate_parfile_content()
+
+    def _calculate_initial_data_section(self):
+        spin_plus = (self.sx_plus, self.sy_plus, self.sz_plus)
+        spin_minus = (self.sx_minus, self.sy_minus, self.sz_minus)
+        momenta_plus = (self.px_plus, self.py_plus, self.pz_plus)
+        momenta_minus = (self.px_minus, self.py_minus, self.pz_minus)
+        distance = 2*self.par_b
+        twopunctures = TwoPunctures(self.m_plus,
+                                    self.m_minus,
+                                    distance,
+                                    momenta_plus=momenta_plus,
+                                    momenta_minus=momenta_minus,
+                                    chi_plus=spin_plus,
+                                    chi_minus=spin_minus)
+        self.twopunctures = twopunctures
+        self.initial_data_section = twopunctures.parfile_code
 
     def _calculate_parfile_path(self):
         """Calculates the path of the parameter file."""
@@ -430,7 +429,7 @@ IOHDF5::out2D_vars              = "
             dx_fine=self.dx_minus,
             cfl_fine=0.5,
             center_num=1,
-            position=(-self.par_b, 0, 0),
+            position=(self.twopunctures.coord_x_minus, 0, 0),
         )
 
         # Same but with different center_num and position
@@ -439,7 +438,7 @@ IOHDF5::out2D_vars              = "
             dx_fine=self.dx_plus,
             cfl_fine=0.5,
             center_num=2,
-            position=(self.par_b, 0, 0),
+            position=(self.twopunctures.coord_x_plus, 0, 0),
         )
         grid_not_synced = pg.Grid(
             (center1, center2), outer_boundary=self.outer_boundary
@@ -473,12 +472,7 @@ IOHDF5::out2D_vars              = "
         before the two radii overlap. This can be seen as a limit
         before they overlap. It's ok if they overlap.
         """
-        n_plus = (
-            np.log2(
-                (2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor)
-            )
-            + 1
-        )
+        n_plus = np.log2((2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor))+ 1
         n_minus = n_plus + self.factor
         self.N_plus = int(round(n_plus))
         self.N_minus = int(round(n_minus))

@@ -182,6 +182,21 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
+name = "pyastronomy"
+version = "0.15.2"
+description = "A collection of astronomy related tools for Python."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+six = "*"
+
+[package.extras]
+occult = ["pyastronomy-ext"]
+
+[[package]]
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
@@ -260,7 +275,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "d00fe623067837d8974ec21b95dbf93b459e6450ab965239e9837d924e90dc51"
+content-hash = "fb1616656c304d373a646e830273f41ac37d1fe5503ca54e7eb91e25ef809ea0"
 
 [metadata.files]
 atomicwrites = [
@@ -482,6 +497,9 @@ pluggy = [
 py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
+]
+pyastronomy = [
+    {file = "PyAstronomy-0.15.2.tar.gz", hash = "sha256:c27aefcda0fbb1a46e5b556789e4045675ecde019fa2f7f23ec245df4b160fe9"},
 ]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},

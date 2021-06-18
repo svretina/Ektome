@@ -29,8 +29,10 @@ import math
 import numpy as np
 import configparser as cfg
 import ektome.globals as glb
+import itertools
 import ektome.proektome.submit as sb
-
+import ektome.proektome.binary as bnr
+import ektome.proektome.simulation as simulation
 
 def read_config():
     """Reads a config file and returns a dictionary with its
@@ -47,14 +49,13 @@ def read_config():
     except ValueError:
         parser.read(get_ini_file())
     config = {}
-    temp = {}
     for section in parser:
+        temp = {}
         if section == "DEFAULT":
             continue
         for key in parser[section]:
             temp[key] = parser[section][key]
         config[section] = temp
-        temp = {}
     return config
 
 
@@ -63,36 +64,32 @@ def create_dirs():
     it creates them.
     """
 
-    if not os.path.exists(f"{glb.proj_path}/simulations"):
-        os.mkdir(f"{glb.proj_path}/simulations")
+    if not os.path.exists(f"{glb.simulations_path}"):
+        os.mkdir(f"{glb.simulations_path}")
     else:
         pass
-    # if not os.path.exists(f"{glb.proj_path}/subfiles"):
-    #     os.mkdir(f"{glb.proj_path}/subfiles")
-    # else:
-    #     pass
-    if not os.path.exists(f"{glb.proj_path}/parfiles"):
-        os.mkdir(f"{glb.proj_path}/parfiles")
+    if not os.path.exists(f"{glb.parfiles_path}"):
+        os.mkdir(f"{glb.parfiles_path}")
     else:
         pass
-    if not os.path.exists(f"{glb.proj_path}/results"):
-        os.mkdir(f"{glb.proj_path}/results")
+    if not os.path.exists(f"{glb.results_path}"):
+        os.mkdir(f"{glb.results_path}")
     else:
         pass
-    if not os.path.exists(f"{glb.proj_path}/results/figures"):
-        os.mkdir(f"{glb.proj_path}/results/figures")
+    if not os.path.exists(f"{glb.figures_path}"):
+        os.mkdir(f"{glb.figures_path}")
     else:
         pass
-    if not os.path.exists(f"{glb.proj_path}/results/figures/u"):
-        os.mkdir(f"{glb.proj_path}/results/figures/u")
+    if not os.path.exists(f"{glb.figures_path}/u"):
+        os.mkdir(f"{glb.figures_path}/u")
     else:
         pass
-    if not os.path.exists(f"{glb.proj_path}/results/figures/psi"):
-        os.mkdir(f"{glb.proj_path}/results/figures/psi")
+    if not os.path.exists(f"{glb.figures_path}/psi"):
+        os.mkdir(f"{glb.figures_path}/psi")
     else:
         pass
-    if not os.path.exists(f"{glb.proj_path}/results/figures/error"):
-        os.mkdir(f"{glb.proj_path}/results/figures/error")
+    if not os.path.exists(f"{glb.figures_path}/error"):
+        os.mkdir(f"{glb.figures_path}/error")
     else:
         pass
 
@@ -115,6 +112,11 @@ def clear_submit_metadata():
     if os.path.exists(glb.metadata_path):
         os.remove(glb.metadata_path)
 
+def my_arange(start,step,end):
+    N = int((end - start) / step + 1)
+    tmp = np.linspace(start, end, N)
+    return np.round(tmp, 3)
+
 
 def create_config_arrays(cfg_dict):
     """Creates numpy arrays spaced according to the steps
@@ -128,24 +130,21 @@ def create_config_arrays(cfg_dict):
     config_array = {}
     for section in cfg_dict:
         try:
-            if "array" in cfg_dict[section].keys():
-                temp_array = cfg_dict[section]["array"].split(",")
-                config_array[section] = np.array([float(x) for x in temp_array])
-            else:
-                start = float(cfg_dict[section]["start"])
-                end = float(cfg_dict[section]["end"])
-                step = float(cfg_dict[section]["step"])
-                N = int((end - start) / step + 1)
-                tmp = np.linspace(start, end, N)
-                config_array[section] = np.round(tmp, 3)
+            temp_array = cfg_dict[section]["array"].split(",")
+            content = []
+            for i in temp_array:
+                if ":" in i:
+                    start, step, end = [float(j) for j in i.split(":") ]
+                    array = my_arange(start,step,end)
+                    content.append(array)
+                else:
+                    content.append(np.array([float(i)]))
+            config_array[section] = np.sort(np.concatenate(content))
+
 
         except (ValueError, KeyError):
             config_array[section] = np.nan
     return config_array
-
-
-def submit_simulation(simulation_dict):
-    _ = sb.submit(simulation_dict)
 
 
 def create_simulation_dict_and_submit(cfg_arr):
@@ -156,99 +155,86 @@ def create_simulation_dict_and_submit(cfg_arr):
     :type cfg_arr: dict.
     :returns: Dictionary with simulation info
     """
-    # Can be replaced with cartesian product of arrays
-    # and loop over it.
-    simulation = {}
-    counter = 0
+    spin1 = list(itertools.product(cfg_arr["minus_spin_x"],
+                                   cfg_arr["minus_spin_y"],
+                                   cfg_arr["minus_spin_z"]) )
+
+    spin2 = list(itertools.product(cfg_arr["plus_spin_x"],
+                                   cfg_arr["plus_spin_y"],
+                                   cfg_arr["plus_spin_z"]) )
+
     for q in cfg_arr["mass_ratio"]:
-        for b in cfg_arr["par_b"]:
-            for sx1 in cfg_arr["plus_spin_x"]:
-                for sy1 in cfg_arr["plus_spin_y"]:
-                    for sz1 in cfg_arr["plus_spin_z"]:
-                        for pz1 in cfg_arr["plus_momentum_z"]:
-                            for py1 in cfg_arr["plus_momentum_y"]:
-                                for px1 in cfg_arr["plus_momentum_x"]:
-                                    for sx2 in cfg_arr["minus_spin_x"]:
-                                        for sy2 in cfg_arr["minus_spin_y"]:
-                                            for sz2 in cfg_arr["minus_spin_z"]:
-                                                for pz2 in cfg_arr["minus_momentum_z"]:
-                                                    for py2 in cfg_arr[
-                                                        "minus_momentum_y"
-                                                    ]:
-                                                        for px2 in cfg_arr[
-                                                            "minus_momentum_x"
-                                                        ]:
-                                                            max_r = q / 2.0
-                                                            if not math.isnan(
-                                                                cfg_arr["excision"]
-                                                            ):
-                                                                step = float(
-                                                                    cfg["excision"][
-                                                                        "step"
-                                                                    ]
-                                                                )
-                                                                radii = np.arange(
-                                                                    glb.min_r,
-                                                                    max_r + step,
-                                                                    step,
-                                                                )
-                                                            else:
-                                                                radii = [max_r]
-                                                            for ex_r in radii:
-                                                                if math.isnan(
-                                                                    cfg_arr["error"]
-                                                                ):
-                                                                    simulation["q"] = q
-                                                                    simulation[
-                                                                        "par_b"
-                                                                    ] = b
-                                                                    simulation[
-                                                                        "px1"
-                                                                    ] = px1
-                                                                    simulation[
-                                                                        "py1"
-                                                                    ] = py1
-                                                                    simulation[
-                                                                        "pz1"
-                                                                    ] = pz1
-                                                                    simulation[
-                                                                        "sx1"
-                                                                    ] = sx1
-                                                                    simulation[
-                                                                        "sy1"
-                                                                    ] = sy1
-                                                                    simulation[
-                                                                        "sz1"
-                                                                    ] = sz1
-                                                                    simulation[
-                                                                        "px2"
-                                                                    ] = px2
-                                                                    simulation[
-                                                                        "py2"
-                                                                    ] = py2
-                                                                    simulation[
-                                                                        "pz2"
-                                                                    ] = pz2
-                                                                    simulation[
-                                                                        "sx2"
-                                                                    ] = sx2
-                                                                    simulation[
-                                                                        "sy2"
-                                                                    ] = sy2
-                                                                    simulation[
-                                                                        "sz2"
-                                                                    ] = sz2
+        exr = q / 2.0
+        binary = bnr.Binary(q)
+        for s1 in spin1:
+            if np.linalg.norm(s1) >=1:
+                print("|Spin| > 1")
+                continue
+            for s2 in spin2:
+                if np.linalg.norm(s2) >=1:
+                    print("|Spin| > 1")
+                    continue
+                for n_orb in cfg_arr["number_of_orbits"]:
+                    b = binary.semimajor(n_orb)
+                    p1, p2 = binary.quasicircular_inspiral(q,
+                                                           2*b,
+                                                           s1,
+                                                           s2)
+                    sim = simulation.Simulation(q=q,b=b,
+                                                px1=p1[0],
+                                                py1=p1[1],
+                                                pz1=p1[2],
+                                                sx1=s1[0],
+                                                sy1=s1[1],
+                                                sz1=s1[2],
+                                                px2=p2[0],
+                                                py2=p2[1],
+                                                pz2=p2[2],
+                                                sx2=s2[0],
+                                                sy2=s2[1],
+                                                sz2=s2[2],
+                                                exr=exr)
+                    sb.submit(sim)
 
-                                                                    simulation[
-                                                                        "ex_r"
-                                                                    ] = ex_r
-                                                                    submit_simulation(
-                                                                        simulation
-                                                                    )
-                                                                    counter = (
-                                                                        counter + 1
-                                                                    )
 
+
+def sanity_check():
+    config_dict = read_config()
+    config_arr = create_config_arrays(config_dict)
+    sim_folders = os.listdir(glb.simulations_path)
+    vanilla_folders = [x for x in sim_folders
+                       if x.startswith("vanilla")]
+    counter = 0
+    for n_orb in config_arr["number_of_orbits"]:
+        for vanilla_folder in vanilla_folders:
+            tmp = "_".join(vanilla_folder.split("_")[1:])
+            excision_folder = f"excision_{tmp}"
+            if not os.path.exists(excision_folder):
+                counter = counter + 1
+                continue
+                print("folder did NOT exist:")
+                print(excision_folder)
+                sim_info = sb.get_info_from_folder_name(excision_folder)
+                binary = bnr.Binary(sim_info['q'])
+                sim_info["b"] = binary.semimajor(n_orb)
+                s1 = (sim_info['sx1'], sim_info['sy1'],
+                      sim_info['sz1'])
+                s2 = (sim_info['sx2'], sim_info['sy2'],
+                      sim_info['sz2'])
+                p1, p2 = binary.quasicircular_inspiral(sim_info['q'],
+                                                       2*sim_info['b'],
+                                                       s1,
+                                                       s2)
+                sim_info["px1"] = p1[0]
+                sim_info["py1"] = p1[1]
+                sim_info["pz1"] = p1[2]
+                sim_info["px2"] = p2[0]
+                sim_info["py2"] = p2[1]
+                sim_info["pz2"] = p2[2]
+
+                sim = simulation.Simulation(**sim_info)
+                submit_simulation(sim)
+    print(counter)
 
 if __name__ == "__main__":
     # Read the config file
@@ -258,21 +244,3 @@ if __name__ == "__main__":
     create_dirs()
     # Create simulation dictionary and submit it
     create_simulation_dict_and_submit(config_arr)
-
-
-# Support for error arays ( run for different error tollerances)
-# elif (( $error > $q/(4.0*$b - $q) ));then
-# echo "Error too large"
-# echo "Defaulting to EH of m+"
-# err=$(echo "scale=3;$q/(4.0*$b - $q) "| bc )
-# ./submit_bone.sh -q $q -b $b -px $px -py $py -e $err -exr $ex_r
-# echo "========================="
-# elif (( $error < $q/(4.0*$b - 1.0) ));then
-# echo "Error too small"
-# echo "Defaulting to EH of m-"
-# err=$(echo "scale=3;$q/(4.0*$b - 1.0) "| bc )
-# ./submit_bone.sh -q $q -b $b -px $px -py $py -e $err -exr $ex_r
-# echo "========================="
-# else
-#     bash submit_bone.sh $q $b $p $error
-# echo "error===================="

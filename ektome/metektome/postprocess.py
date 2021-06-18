@@ -22,12 +22,12 @@ import sys
 import pandas as pd
 from collections import Counter
 from multiprocessing import Pool
-
+import multiprocessing
 import ektome.globals as glb
 import ektome.metektome.error as e
 import ektome.metektome.simulation as sim
 import ektome.metektome.plotting_modules as pm
-
+import time
 
 def get_processed_sims(folders):
     processed_folders = []
@@ -46,52 +46,82 @@ def get_unfinished_sims(folders):
     return unfinished_folders
 
 def get_folders(recalc=False):
+    print("Getting folders to process...")
     sim_folders = os.listdir(glb.simulations_path)
     vanilla_folders = [x for x in sim_folders if x.startswith("vanilla")]
     if recalc:
-        exclude_folders = get_unfinished_sims(vanilla_folders)
+        unfinished = get_unfinished_sims(vanilla_folders)
+        if not len(unfinished):
+            exclude_folders = []
+            folders = vanilla_folders
+        else:
+            exclude_folders = unfinished
+            folders = list((Counter(vanilla_folders)
+                - Counter(exclude_folders)).elements())
     else:
-        exclude_folders = get_processed_sims(vanilla_folders)
-        + get_unfinished_sims()
+        processed = get_processed_sims(vanilla_folders)
+        unfinished = get_unfinished_sims(vanilla_folders)
+        if not len(processed) and not len(unfinished):
+            exclude_folders = []
+            folders = vanilla_folders
+        else:
+            exclude_folders = get_processed_sims(vanilla_folders) + get_unfinished_sims(vanilla_folders)
 
-    folders = list((Counter(vanilla_folders)
-                   - Counter(exclude_folders)).elements())
+            folders = list((Counter(vanilla_folders)
+                            - Counter(exclude_folders)).elements())
     return folders
 
 def get_error_dataframe(folder):
     print(folder)
-    err = e.Error(folder)
-    info = err.error_report()
-    return info
+    try:
+        err = e.Error(folder,dim=3)
+        info = err.error_report()
+        # info.to_csv(f"error_data3Dcython.csv",
+        #             mode='a', header=False, index=False)
+        return info
+    except FileNotFoundError:
+        return pd.DataFrame()
 
-def parallel_loop_over_folders(save=True, recalc=False):
+def parallel_loop_over_folders(save=True, recalc=False, n_cpus=None):
     folders = get_folders(recalc)
-    with Pool() as pool:
+    print("Starting folder parsing...")
+    with Pool(processes=n_cpus) as pool:
         result = pool.map(get_error_dataframe, folders)
-    error_info = pd.concat(result, ignore_index=True)
+
+    error_info = pd.concat(result, ignore_ixndex=True)
+    print("end")
+
     if save:
         if recalc:
-            error_info.to_csv(f"{glb.results_path}/error_data.csv",
+            error_info.to_csv(f"{glb.results_path}/error_data3D.csv",
                           mode='w', header=True, index=False)
         else:
-            error_info.to_csv(f"{glb.results_path}/error_data.csv",
+            error_info.to_csv(f"{glb.results_path}/error_data3D.csv",
                           mode='a', header=False, index=False)
     return error_info
 
-def serial_loop_over_folders(save=True, plot=False, recalc=False):
+def serial_loop_over_folders(save=True, recalc=False):
     folders = get_folders(recalc)
     error_info = pd.DataFrame()
-    for folder in folders:
-        print(folder)
-        err = e.Error(folder)
+    num_of_folders = len(folders)
+    print("Serial loop")
+    print(f"Number of files to process: {num_of_folders}")
+    for idx, folder in enumerate(folders):
+        print(f"{idx+1}/{num_of_folders}",folder)
+        try:
+            err = e.Error(folder,dim=3)
+        except FileNotFoundError:
+            continue
         info = err.error_report()
+        # info.to_csv(f"{glb.results_path}/error_data3Dpythran.csv",
+        #            mode='a', header=False, index=False)
         error_info = error_info.append(info, ignore_index=True)
     if save:
         if recalc:
-            error_info.to_csv(f"{glb.results_path}/error_data.csv",
+            error_info.to_csv(f"{glb.results_path}/error_data3Dpythran_final.csv",
                           mode='w', index=False)
         else:
-            error_info.to_csv(f"{glb.results_path}/error_data.csv",
+            error_info.to_csv(f"{glb.results_path}/error_data3Dpythran_final.csv",
                           mode='a', header=False, index=False)
     return error_info
 

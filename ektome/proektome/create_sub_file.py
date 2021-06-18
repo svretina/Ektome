@@ -39,14 +39,11 @@ def create_sub_dict(base_name):
 
     par_file_path = "/".join((glb.parfiles_path, base_name + ".par"))
     # How much memory to request
-    # if simulation["par_b"] == 50:
-    #     memory = "15000MB"
-    # elif simulation["par_b"] == 55:
-    #     memory = "20000MB"
-    # elif simulation["par_b"] == 60:
-    #     memory = "25000MB"
-    # else:
-    #     memory = "10000MB"
+    b = int(base_name.split("_")[2].split("b")[1])
+    if  b >= 100 and b<1000:
+        memory = "15000MB"
+    elif b >= 1000:
+        memory = "12000MB"
 
     sim_dir = "/".join((glb.simulations_path, base_name))
     sub_file_dict = {
@@ -57,9 +54,9 @@ def create_sub_dict(base_name):
         "error": sim_dir + "/err",
         "log": sim_dir + "/log",
         "accounting_group": "cbc.prod.initial_data",
-        "request_cpus": "Target.TotalSlotCPUs",
+        "request_cpus": 5,
         "getenv": "True",
-        "request_memory": 18000,
+        "request_memory": memory,
         "Rank": "Memory",
         "on_exit_hold": "( ExitCode != 0 )",
         "kill_sig": "15",
