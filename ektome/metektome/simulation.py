@@ -80,12 +80,7 @@ class Simulation:
         # in our package:
         # 1 cooresponds to the (-) puncture
         # 2 cooresponds to the (+) puncture
-        # self.p1x = self.read_param("momentum2x", self.metadata)
-        # self.p1y = self.read_param("momentum2y", self.metadata)
-        # self.p1z = self.read_param("momentum2z", self.metadata)
-        # self.p2x = self.read_param("momentum1x", self.metadata)
-        # self.p2y = self.read_param("momentum1y", self.metadata)
-        # self.p2z = self.read_param("momentum1z", self.metadata)
+
         self.s1x = self.read_param("spin2x", self.metadata)
         self.s1y = self.read_param("spin2y", self.metadata)
         self.s1z = self.read_param("spin2z", self.metadata)
@@ -115,7 +110,7 @@ class Simulation:
 
     def calculate_max_with_mask_3D(self,var):
         maxs = []
-        for ref_level, comp_index, unif_grid in var:
+        for _ref_level, _comp_index, unif_grid in var:
             x, y, z= unif_grid.coordinates_from_grid()
             mask = np.ones(unif_grid.data.shape)
             for j in range(y.shape[0]):
@@ -137,7 +132,7 @@ class Simulation:
 
     def calculate_max_with_mask(self, var):
         maxs = []
-        for ref_level, comp_index, unif_grid in var:
+        for _ref_level, _comp_index, unif_grid in var:
             if self.dim == 2:
                 x, y = unif_grid.coordinates_from_grid()
             elif self.dim == 3:
@@ -149,8 +144,7 @@ class Simulation:
                         mask[i,j] = np.nan
                         continue
 
-                    if self.dim == 2:
-                        if self._circle(x[i],y[j]) < (self.ex_r**2):
+                    if self.dim == 2 and self._circle(x[i],y[j]) < (self.ex_r**2):
                             mask[i,j] = np.nan
                     if self.dim == 3:
                         for k in range(z.shape[0]):
