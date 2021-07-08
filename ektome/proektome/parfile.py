@@ -472,7 +472,7 @@ IOHDF5::out3D_vars              = "
         before the two radii overlap. This can be seen as a limit
         before they overlap. It's ok if they overlap.
         """
-        n_plus = np.log2((2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor))+ 1
+        n_plus = np.log2((2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor)) + 1
         n_minus = n_plus + self.factor
         self.N_plus = int(round(n_plus))
         self.N_minus = int(round(n_minus))

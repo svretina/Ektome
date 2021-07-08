@@ -57,7 +57,7 @@ def get_folders(recalc=False):
         else:
             exclude_folders = unfinished
             folders = list((Counter(vanilla_folders)
-                - Counter(exclude_folders)).elements())
+                            - Counter(exclude_folders)).elements())
     else:
         processed = get_processed_sims(vanilla_folders)
         unfinished = get_unfinished_sims(vanilla_folders)
@@ -94,10 +94,10 @@ def parallel_loop_over_folders(save=True, recalc=False, n_cpus=None):
     if save:
         if recalc:
             error_info.to_csv(f"{glb.results_path}/error_data3D.csv",
-                          mode='w', header=True, index=False)
+                              mode='w', header=True, index=False)
         else:
             error_info.to_csv(f"{glb.results_path}/error_data3D.csv",
-                          mode='a', header=False, index=False)
+                              mode='a', header=False, index=False)
     return error_info
 
 def serial_loop_over_folders(save=True, recalc=False):
@@ -119,8 +119,8 @@ def serial_loop_over_folders(save=True, recalc=False):
     if save:
         if recalc:
             error_info.to_csv(f"{glb.results_path}/error_data3Dpythran_final.csv",
-                          mode='w', index=False)
+                              mode='w', index=False)
         else:
             error_info.to_csv(f"{glb.results_path}/error_data3Dpythran_final.csv",
-                          mode='a', header=False, index=False)
+                              mode='a', header=False, index=False)
     return error_info

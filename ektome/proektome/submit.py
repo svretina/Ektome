@@ -133,7 +133,7 @@ def submit(simulation):
 
     if not check_existence_simulation(vanilla_base_name):
         vanilla_parfile = p.Parameter_File(simulation,
-                                       excision=False, N=1)
+                                           excision=False, N=1)
         vanilla_parfile.write_parfile()
         vnl_sub = csf.create_sub_dict(vanilla_base_name)
         vanilla_sim_dir = create_sim_dir(vanilla_base_name)

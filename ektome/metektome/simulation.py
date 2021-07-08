@@ -111,7 +111,7 @@ class Simulation:
     def calculate_max_with_mask_3D(self,var):
         maxs = []
         for _ref_level, _comp_index, unif_grid in var:
-            x, y, z= unif_grid.coordinates_from_grid()
+            x, y, z = unif_grid.coordinates_from_grid()
             mask = np.ones(unif_grid.data.shape)
             for j in range(y.shape[0]):
                 for i in range(x.shape[0]):

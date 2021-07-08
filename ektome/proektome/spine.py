@@ -167,11 +167,11 @@ def create_simulation_dict_and_submit(cfg_arr):
         exr = q / 2.0
         binary = bnr.Binary(q)
         for s1 in spin1:
-            if np.linalg.norm(s1) >=1:
+            if np.linalg.norm(s1) >= 1:
                 print("|Spin| > 1")
                 continue
             for s2 in spin2:
-                if np.linalg.norm(s2) >=1:
+                if np.linalg.norm(s2) >= 1:
                     print("|Spin| > 1")
                     continue
                 for n_orb in cfg_arr["number_of_orbits"]:

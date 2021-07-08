@@ -31,7 +31,7 @@ def check_if_processed():
     prefix = "error_data_3D_q"
     bools = []
     for q in qs:
-        q=int(q)
+        q = int(q)
         if os.path.isfile(f'{prefix}{q}.csv'):
             bools.append(True)
         if os.path.isfile(f'{prefix}{q}_trend.csv'):
@@ -50,7 +50,7 @@ def seperate_csv_in_q():
 
     exclude_bad_sims(data, f"{glb.proj_path}/nans.dat")
     for q in qs:
-        temp = data[data['q']==q]
+        temp = data[data['q'] == q]
         counts = temp['b'].value_counts().to_frame()
         counts.reset_index(level=0,inplace=True)
         counts.columns = ["b","counts"]

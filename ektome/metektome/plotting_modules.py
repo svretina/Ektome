@@ -264,7 +264,7 @@ def plot_error_curve_separation(error_dict):
         data = error_dict
 
     q = int(data['q'].unique()[0])
-    data = data[(data['s1']<=0.9) | (data['s2']<=0.9)]
+    data = data[(data['s1'] <= 0.9) | (data['s2'] <= 0.9)]
     # chi1 = data["s1z"]
     # chi2 = data["s2z"]
     mtot = 1 + data["q"]
@@ -299,7 +299,7 @@ def plot_error_xeff(error_dict):
         chi1 = temp_data["s1z"]
         chi2 = temp_data["s2z"]
         mtot = 1 + temp_data["q"]
-        chi_eff = ( 1 * chi1 + temp_data["q"] * chi2)/ mtot
+        chi_eff = ( 1 * chi1 + temp_data["q"] * chi2) / mtot
 
         plt.scatter(chi_eff, temp_data['diff'],
                     marker=markers[index],
