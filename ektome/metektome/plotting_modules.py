@@ -6,6 +6,26 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import ektome.globals as glb
+import tikzplotlib as tikz
+
+fig_width_pt = 510.0  # Get this from LaTeX using \showthe\columnwidth
+inches_per_pt = 1.0/72.27               # Convert pt to inch
+golden_mean = (np.sqrt(5)-1.0)/2.0         # Aesthetic ratio
+fig_width = fig_width_pt*inches_per_pt  # width in inches
+fig_height = fig_width*golden_mean      # height in inches
+fig_size =  [fig_width,fig_height]
+
+params = {'backend': 'ps',
+          'font.family': 'Times New Roman',
+          'axes.labelsize': 12,
+          'legend.fontsize': 10,
+          'xtick.labelsize': 12,
+          'ytick.labelsize': 12,
+          'text.usetex': False,
+          'figure.figsize': fig_size}
+
+plt.rcParams.update(params)
+
 
 def plot_error_u_xy(error_obj):
     plt.clf()
@@ -228,13 +248,14 @@ def plot_psi_xy(sim_obj):
     plt.title(f"$\psi$ with Excision Radius: {sim_obj.ex_r}")
     plt.colorbar(im, orientation="horizontal")
 
-    savedir = sim_obj.figure_dir + "/psi"
+    savedir = f"{sim_obj.figure_dir}/psi"
 
     plt.savefig(f"{savedir}/{sim_obj.sim_name}.png")
-    plt.savefig(f"{sim_obj.sim_dir}/psi.png")
+    plt.savefig(f"{savedir}.png")
 
 
-def plot_error_curve_separation(error_dict, mode):
+def plot_error_curve_separation(error_dict):
+    error_dict = f"{glb.results_path}/{error_dict}"
     plt.figure()
     plt.clf()
     if not isinstance(error_dict, pd.core.frame.DataFrame):
@@ -242,150 +263,53 @@ def plot_error_curve_separation(error_dict, mode):
     else:
         data = error_dict
 
-    if mode == "momentum":
-        momentum = data[(data["s1"] == 0) & (data["s2"] == 0)]
-        groups = ["p1", "p2", "p1x", "p1y", "p1z",
-                  "p2x", "p2y", "p2z"]
-        counter = 0
-        counter2 = 0
-        for state, frame in momentum.groupby(by=groups):
-            if state == (0.0, 0.0, -0.0, 0.0, 0.0, 0.0, -0.0, -0.0):
-                continue
-            frame = frame.sort_values(by=["b"])
-            b = frame["b"].values
-            q = frame["q"].values[0]
-            theoretical = frame["max_error_psi_theoretical"].values
-            error_psi = frame["max_error_psi"].values
-            dif = theoretical - error_psi
-            plot_color = "#888888"
-            if np.any(dif<0):
-                counter = counter + 1
-                plot_color =  "#66ff66"
-            plt.plot(
-                b,
-                dif,
-                color=plot_color,
-                marker=".",
-                alpha=0.4,
-                label=rf"$p_1$={state[0]},\
-                         $p_2$={state[1]}",
-            )
-            counter2 = counter2 + 1
-        print(f"{counter}/{counter2}")
+    q = int(data['q'].unique()[0])
+    data = data[(data['s1']<=0.9) | (data['s2']<=0.9)]
+    # chi1 = data["s1z"]
+    # chi2 = data["s2z"]
+    mtot = 1 + data["q"]
+    # chi_eff = ( 1 * chi1 + data["q"] * chi2)/ mtot
+    data['b/m'] = data['b']/mtot
+    data['b/m'] = data['b/m'].round(decimals=3)
+    data.sort_values(by=['b'], inplace=True)
 
-    elif mode == "spin":
-        spin = data[(data["p1"] == 0) & (data["p2"] == 0)]
-        groups = ["s1", "s2", "s1x", "s1y", "s1z", "s2x", "s2y", "s2z"]
-        for state, frame in spin.groupby(by=groups):
-            if state == (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):
-                continue
-            frame = frame.sort_values(by=["b"])
-            b = frame["b"].values
-            q = frame["q"].values[0]
-            theoretical = frame["max_error_psi_theoretical"].values
-            error_psi = frame["max_error_psi"].values
-            dif = theoretical - error_psi
-            plot_color = "#888888"
-            if np.any( dif < 0):
-                plot_color =  "#66ff66"
-            plt.plot(
-                b,
-                dif,
-                color=plot_color,
-                marker=".",
-                alpha=0.4,
-                label=rf"$s_1$={state[0]},\
-                         $s_2$={state[1]}",
-            )
+    plt.plot(data['b/m'], data['diff'])
+    plt.title(f"mass ratio {q}")
+    plt.savefig(f"{glb.results_path}/test_{q}.png")
+    tikz.save(f"{glb.figures_path}/separation_{q}.tikz")
+
+def plot_error_xeff(error_dict):
+    error_dict = f"{glb.results_path}/{error_dict}"
+    plt.figure()
+    plt.clf()
+    if not isinstance(error_dict, pd.core.frame.DataFrame):
+        data = pd.read_csv(error_dict, header=0)
     else:
-        counter = 0
-        counter2 = 0
-        groups = ["q","p1", "p2", "p1x", "p1y", "p1z",
-                  "p2x", "p2y", "p2z" ,
-                  "s1", "s2", "s1x", "s1y", "s1z",
-                  "s2x", "s2y", "s2z"]
-        violators = pd.DataFrame()
-        for state, frame in data.groupby(by=groups):
-            if state == (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):
-                continue
-            elif state == (0.0, 0.0, -0.0, 0.0, 0.0, 0.0, -0.0, -0.0):
-                continue
-            frame = frame.sort_values(by=["q"])
-            frame = frame.sort_values(by=["b"])
+        data = error_dict
 
-            b = frame["b"].values
-            q = frame["q"].values[0]
-            # print(frame[["b","q","max_error_psi"]])
-            theoretical = frame["max_error_psi_theoretical"].values
-            error_psi = frame["max_error_psi"].values
-            dif = theoretical - error_psi
-            plot_color = "#888888"
-            if np.any(dif < 0):
-                indexes = np.where(dif<0)[0]
-                plot_color = "#66ff66"
-                counter = counter + 1
-                frame["diff"] = dif
-                report = frame[["q","b","p1","p2","s1","s2","diff"]].iloc[indexes]
-                violators = violators.append(report, ignore_index=True)
-            plt.semilogx(
-                b,
-                dif,
-                color=plot_color,
-                marker=".",
-                alpha=0.4
-            )
-            counter2 = counter2 + 1
-        print(f"{counter}/{counter2}")
-        violators.to_csv(f"{glb.results_path}/violators.csv", index=False)
-    # q = frame["q"].values[0]
-    # print(q)
-    # theoretical = q / (4.0 * b - q)
-    # plt.semilogy(
-    #     b,
-    #     theoretical,
-    #     color="#cc0000",
-    #     marker="+",
-    #     lw=1.5,
-    #     label=r"$p_1$=0.0, $p_2$=0.0",
-    # )
+    q = int(data['q'].unique()[0])
+    data = data[(data['s1']<=0.9) | (data['s2']<=0.9)]
+    bs = data['b'].unique()
 
-    # #"#cc0000",\
-    # plt.plot(b,theoretical,"rx",label="p=0.0")
-    plt.title(rf"Maximum Error in $\Psi$ for BHs with {mode}")
-    plt.xlabel("par_b variable")
-    plt.ylabel("Maximum Error")
-    plt.grid(True)
-    # plt.legend()
-    results_dir = f"{glb.figures_path}/error-analysis"
-    plt.tight_layout()
-    plt.savefig(f"{results_dir}/error_separation-{mode}.png")
+    markers = ['D','o']
+    colors = ["#f1a340", "#998ec3" ]
 
+    for index, b in enumerate(bs):
+        temp_data = data[data['b'] == b]
+        chi1 = temp_data["s1z"]
+        chi2 = temp_data["s2z"]
+        mtot = 1 + temp_data["q"]
+        chi_eff = ( 1 * chi1 + temp_data["q"] * chi2)/ mtot
 
-# def plot_error_curve_momentum(error_dict):
-#     plt.clf()
-#     if not isinstance(error_dict, pd.core.frame.DataFrame):
-#         data = pd.read_csv(error_dict, header=0)
-#     else:
-#         data = error_dict
-#     print(data)
-#     q = data["q"][0]
-#     b = data["b"].values
-#     theoretical = q / (4.0 * b - q)
+        plt.scatter(chi_eff, temp_data['diff'],
+                    marker=markers[index],
+                    edgecolor=colors[index],
+                    facecolors='none',
+                    label=f"b={temp_data['b'].unique()[0]/q}")
 
-#     # plt.plot(b,theoretical,marker="x",label="p=0.0")
-#     markers = ["o", "+", "*", "1", "D", "X", ".", "^", "s", "H"]
-#     for state, frame in data.groupby(by=["b"]):
-#         plt.scatter(
-#             frame["p1"],
-#             frame["max_error_psi"],
-#             label=f"b={state}",
-#         )
-
-#     # plt.plot(b,theoretical,marker="x",label="p=0.0")
-
-#     plt.title(r"Maximum Error in $\Psi$")
-#     plt.xlabel("momentum")
-#     plt.ylabel("Maximum Error")
-#     plt.legend()
-#     results_dir = os.getcwd() + "/results/figures/error-analysis/"
-#     plt.savefig(f"{results_dir}error_momentum.png")
+    plt.xlabel(r"$\chi_{eff}$")
+    plt.title(f"q={q}")
+    plt.grid(True, 'major', axis='y')
+    plt.legend()
+    plt.savefig(f"{glb.results_path}/test_xeff_{q}.png")
+    tikz.save(f"{glb.figures_path}/xeff_{q}.tikz")
