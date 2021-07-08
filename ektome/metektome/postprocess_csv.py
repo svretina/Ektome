@@ -66,20 +66,20 @@ def seperate_csv_in_q():
 
 
 def exclude_bad_sims(df, filename):
-    fl = open(filename,"r")
-    lines = fl.readlines()
+    with open(filename,"r") as fl:
+        lines = fl.readlines()
 
-    for line in lines:
-        info = sim_info_from_name(line)
-        idx = df.index[(df["q"] == info["q"])     &
-                       (df["s1x"] == info["s1x"]) &
-                       (df["s1y"] == info["s1y"]) &
-                       (df["s1z"] == info["s1z"]) &
-                       (df["s2x"] == info["s2x"]) &
-                       (df["s2y"] == info["s2y"]) &
-                       (df["s2z"] == info["s2z"]) ]
+        for line in lines:
+            info = sim_info_from_name(line)
+            idx = df.index[(df["q"] == info["q"])     &
+                           (df["s1x"] == info["s1x"]) &
+                           (df["s1y"] == info["s1y"]) &
+                           (df["s1z"] == info["s1z"]) &
+                           (df["s2x"] == info["s2x"]) &
+                           (df["s2y"] == info["s2y"]) &
+                           (df["s2z"] == info["s2z"]) ]
 
-        df.drop(index=idx, inplace=True)
+            df.drop(index=idx, inplace=True)
     return df
 
 

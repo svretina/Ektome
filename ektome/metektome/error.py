@@ -14,7 +14,8 @@ class Error:
         self.sim_name1 = vnl_sim_name
         self.sim_name2 = f"excision{vnl_sim_name.split('vanilla')[1]}"
         self.dim = dim
-
+        self.error_u = None
+        self.error_psi = None
         try:
             self.vanilla = sim.Simulation(self.sim_name1,self.dim)
             self.excision = sim.Simulation(self.sim_name2,self.dim)
@@ -56,7 +57,7 @@ class Error:
         self.error_psi_t = temp/self.vanilla.psi
 
     def _calculate_error_norm_with_mask(self):
-        for ref_level, comp_index, unif_grid in self.error_psi:
+        for _ref_level, _comp_index, unif_grid in self.error_psi:
             x, y = unif_grid.coordinates_from_grid()
             mask = np.ones(unif_grid.data.shape)
             for j in range(y.shape[0]):
@@ -78,7 +79,7 @@ class Error:
 
     def calculate_max_with_mask3D(self,var):
         maxs = []
-        for ref_level, comp_index, unif_grid in var:
+        for _ref_level, _comp_index, unif_grid in var:
             x, y, z = unif_grid.coordinates_from_grid()
             dx = unif_grid.dx
 
@@ -103,7 +104,7 @@ class Error:
 
     def calculate_max_with_mask(self, var):
         maxs = []
-        for ref_level, comp_index, unif_grid in var:
+        for _ref_level, _comp_index, unif_grid in var:
             if self.vanilla.dim == 2:
                 x, y = unif_grid.coordinates_from_grid()
                 dx, dy = unif_grid.dx
@@ -117,8 +118,7 @@ class Error:
                     for i in range(x.shape[0]):
                         if x[i] < xbounds[0] or x[i] > xbounds[1]:
                             continue
-                        if self.dim == 2:
-                            if self._circle(x[i],y[j]) >= (self.ex_r**2):
+                        if self.dim == 2 and self._circle(x[i],y[j]) >= (self.ex_r**2):
                                 mask[i,j] = 1
 
             elif self.vanilla.dim == 3:

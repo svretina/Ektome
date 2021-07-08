@@ -40,7 +40,7 @@ def create_sub_dict(base_name):
     par_file_path = "/".join((glb.parfiles_path, base_name + ".par"))
     # How much memory to request
     b = int(base_name.split("_")[2].split("b")[1])
-    if  b >= 100 and b<1000:
+    if 1000 < b <= 100:
         memory = "15000MB"
     elif b >= 1000:
         memory = "12000MB"

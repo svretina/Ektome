@@ -126,7 +126,7 @@ def submit(simulation):
     """
     vanilla_base_name = simulation.vanilla_base_name
     excision_base_name = simulation.excision_base_name
-    submit = True
+    want2submit = True
     print("Submiting simulations for:")
     print(vanilla_base_name.split("vanilla_")[1])
     print(30*"==")
@@ -138,7 +138,7 @@ def submit(simulation):
         vnl_sub = csf.create_sub_dict(vanilla_base_name)
         vanilla_sim_dir = create_sim_dir(vanilla_base_name)
         check_output_dir(vanilla_sim_dir)
-        if submit:
+        if want2submit:
             vnl_id = submit_simulation(vnl_sub)
             write_submit_metadata(vnl_id, vanilla_base_name)
 
@@ -152,7 +152,7 @@ def submit(simulation):
     excision_sim_dir = create_sim_dir(excision_base_name)
     check_output_dir(excision_sim_dir)
 
-    if submit:
+    if want2submit:
         exc_id = submit_simulation(exc_sub)
         write_submit_metadata(exc_id, excision_base_name)
 
