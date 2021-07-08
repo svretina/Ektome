@@ -134,7 +134,7 @@ def create_config_arrays(cfg_dict):
             content = []
             for i in temp_array:
                 if ":" in i:
-                    start, step, end = [float(j) for j in i.split(":") ]
+                    start, step, end = [float(j) for j in i.split(":")]
                     array = my_arange(start,step,end)
                     content.append(array)
                 else:
@@ -157,11 +157,11 @@ def create_simulation_dict_and_submit(cfg_arr):
     """
     spin1 = list(itertools.product(cfg_arr["minus_spin_x"],
                                    cfg_arr["minus_spin_y"],
-                                   cfg_arr["minus_spin_z"]) )
+                                   cfg_arr["minus_spin_z"]))
 
     spin2 = list(itertools.product(cfg_arr["plus_spin_x"],
                                    cfg_arr["plus_spin_y"],
-                                   cfg_arr["plus_spin_z"]) )
+                                   cfg_arr["plus_spin_z"]))
 
     for q in cfg_arr["mass_ratio"]:
         exr = q / 2.0
@@ -195,6 +195,7 @@ def create_simulation_dict_and_submit(cfg_arr):
                                                 sz2=s2[2],
                                                 exr=exr)
                     sb.submit(sim)
+
 
 if __name__ == "__main__":
     # Read the config file

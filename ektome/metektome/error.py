@@ -4,8 +4,9 @@ import numpy as np
 import numpy.ma as ma
 import pandas as pd
 import matplotlib.pyplot as plt
-import ektome.metektome.simulation as sim
 import bottleneck as bn
+
+import ektome.metektome.simulation as sim
 import ektome.metektome.cython_funcs as cf
 import ektome.metektome.search3D as s
 
@@ -39,12 +40,11 @@ class Error:
             + y * y
 
     def _sphere(self,x,y,z):
-        return (x + self.vanilla.par_b) * (x + self.vanilla.par_b)\
-            + y * y  + z * z
+        return (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y + z * z
 
     def _calculate_error_u(self):
-        if ((self.vanilla.s1 == 0 ) &
-            (self.vanilla.s2 == 0 )):
+        if ((self.vanilla.s1 == 0) &
+            (self.vanilla.s2 == 0)):
             self.error_u = self.excision.u
         else:
             self.error_u = abs(self.vanilla.u - self.excision.u)/self.vanilla.u
@@ -84,12 +84,12 @@ class Error:
             dx = unif_grid.dx
 
 
-            ybounds = [ -self.ex_r - dx[1],
-                        self.ex_r + dx[1] ]
-            zbounds = [ -self.ex_r - dx[2],
-                        self.ex_r + dx[2] ]
-            xbounds = [ -self.par_b - self.ex_r - dx[0],
-                        -self.par_b + self.ex_r + dx[0] ]
+            ybounds = [-self.ex_r - dx[1],
+                       self.ex_r + dx[1]]
+            zbounds = [-self.ex_r - dx[2],
+                       self.ex_r + dx[2]]
+            xbounds = [-self.par_b - self.ex_r - dx[0],
+                       -self.par_b + self.ex_r + dx[0]]
             # mask = np.ones(unif_grid.data.shape)*np.nan
             # print(unif_grid.data.shape)
             mask = s.loop(self.par_b, self.ex_r,
@@ -108,9 +108,9 @@ class Error:
             if self.vanilla.dim == 2:
                 x, y = unif_grid.coordinates_from_grid()
                 dx, dy = unif_grid.dx
-                ybounds = [ -self.ex_r - dy, self.ex_r + dy ]
-                xbounds = [ -self.par_b - self.ex_r - dx,
-                            -self.par_b + self.ex_r + dx ]
+                ybounds = [-self.ex_r - dy, self.ex_r + dy]
+                xbounds = [-self.par_b - self.ex_r - dx,
+                           -self.par_b + self.ex_r + dx]
                 mask = np.ones(unif_grid.data.shape)*np.nan
                 for j in range(y.shape[0]):
                     if y[j] < ybounds[0] or y[j] > ybounds[1]:
@@ -119,16 +119,16 @@ class Error:
                         if x[i] < xbounds[0] or x[i] > xbounds[1]:
                             continue
                         if self.dim == 2 and self._circle(x[i],y[j]) >= (self.ex_r**2):
-                                mask[i,j] = 1
+                            mask[i,j] = 1
 
             elif self.vanilla.dim == 3:
                 x, y, z = unif_grid.coordinates_from_grid()
                 dx = unif_grid.dx
 
-                ybounds = [ -self.ex_r - dx[1], self.ex_r + dx[1] ]
-                zbounds = [ -self.ex_r - dx[2], self.ex_r + dx[2] ]
-                xbounds = [ -self.par_b - self.ex_r - dx[0],
-                            -self.par_b + self.ex_r + dx[0] ]
+                ybounds = [-self.ex_r - dx[1], self.ex_r + dx[1]]
+                zbounds = [-self.ex_r - dx[2], self.ex_r + dx[2]]
+                xbounds = [-self.par_b - self.ex_r - dx[0],
+                           -self.par_b + self.ex_r + dx[0]]
                 mask = np.ones(unif_grid.data.shape)*np.nan
                 for j in range(y.shape[0]):
                     if y[j] < ybounds[0] or y[j] > ybounds[1]:

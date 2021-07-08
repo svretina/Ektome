@@ -288,11 +288,11 @@ def plot_error_xeff(error_dict):
         data = error_dict
 
     q = int(data['q'].unique()[0])
-    data = data[(data['s1']<=0.9) | (data['s2']<=0.9)]
+    data = data[(data['s1'] <= 0.9) | (data['s2'] <= 0.9)]
     bs = data['b'].unique()
 
     markers = ['D','o']
-    colors = ["#f1a340", "#998ec3" ]
+    colors = ["#f1a340", "#998ec3"]
 
     for index, b in enumerate(bs):
         temp_data = data[data['b'] == b]

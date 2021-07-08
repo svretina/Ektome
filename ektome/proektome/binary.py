@@ -63,7 +63,7 @@ class Binary:
         term = 2.*N_orb * 32 * np.pi ** (8./3.)\
             * self.m_chirp**(5./3.)\
             + self.f_isco**(-5./3.)
-        return ( self.m_tot**(1./3.) / denom ) * term**(2./5.)
+        return (self.m_tot**(1./3.) / denom) * term**(2./5.)
 
     @staticmethod
     def v_at(f,r):
