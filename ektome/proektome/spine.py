@@ -196,46 +196,6 @@ def create_simulation_dict_and_submit(cfg_arr):
                                                 exr=exr)
                     sb.submit(sim)
 
-
-
-def sanity_check():
-    config_dict = read_config()
-    config_arr = create_config_arrays(config_dict)
-    sim_folders = os.listdir(glb.simulations_path)
-    vanilla_folders = [x for x in sim_folders
-                       if x.startswith("vanilla")]
-    counter = 0
-    for n_orb in config_arr["number_of_orbits"]:
-        for vanilla_folder in vanilla_folders:
-            tmp = "_".join(vanilla_folder.split("_")[1:])
-            excision_folder = f"excision_{tmp}"
-            if not os.path.exists(excision_folder):
-                counter = counter + 1
-                continue
-                print("folder did NOT exist:")
-                print(excision_folder)
-                sim_info = sb.get_info_from_folder_name(excision_folder)
-                binary = bnr.Binary(sim_info['q'])
-                sim_info["b"] = binary.semimajor(n_orb)
-                s1 = (sim_info['sx1'], sim_info['sy1'],
-                      sim_info['sz1'])
-                s2 = (sim_info['sx2'], sim_info['sy2'],
-                      sim_info['sz2'])
-                p1, p2 = binary.quasicircular_inspiral(sim_info['q'],
-                                                       2*sim_info['b'],
-                                                       s1,
-                                                       s2)
-                sim_info["px1"] = p1[0]
-                sim_info["py1"] = p1[1]
-                sim_info["pz1"] = p1[2]
-                sim_info["px2"] = p2[0]
-                sim_info["py2"] = p2[1]
-                sim_info["pz2"] = p2[2]
-
-                sim = simulation.Simulation(**sim_info)
-                submit_simulation(sim)
-    print(counter)
-
 if __name__ == "__main__":
     # Read the config file
     config_dict = read_config()

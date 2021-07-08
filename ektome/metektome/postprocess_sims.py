@@ -124,10 +124,3 @@ def serial_loop_over_folders(save=True, recalc=False):
             error_info.to_csv(f"{glb.results_path}/error_data3Dpythran_final.csv",
                           mode='a', header=False, index=False)
     return error_info
-
-
-def error_analysis():
-    error_data = pd.read_csv(f"{glb.results_path}/error_data.csv", header=0)
-    # ????--------------------- v ----- check this
-    # pm.plot_error_curve_momentum(error_data)
-    pm.plot_error_curve_separation(error_data, "momentum")

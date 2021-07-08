@@ -47,8 +47,7 @@ def create_sim_dir(base_name):
     dir_name = f"{glb.simulations_path}/{base_name}"
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
-    else:
-        pass
+
     return dir_name
 
 
@@ -115,10 +114,7 @@ def check_existence_simulation(simulation_folder_name):
     """
     folder_path = f"{glb.simulations_path}/{simulation_folder_name}"
     file_path = f"{folder_path}/twopunctures.xyz.h5"
-    if os.path.exists(file_path):
-        return True
-    else:
-        return False
+    return bool(os.path.exists(file_path))
 
 
 def submit(simulation):
