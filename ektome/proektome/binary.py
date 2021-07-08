@@ -43,7 +43,9 @@ class Binary:
         self.m2 = q
         self.m_tot = self.m1 + self.m2
         self.mu = (self.m1 * self.m2) / self.m_tot
-        self.m_chirp = (self.m1 * self.m2) ** (3.0 / 5.0) / (self.m_tot) ** (1.0 / 5.0)
+        self.m_chirp = (self.m1 * self.m2) ** (3.0 / 5.0) / (self.m_tot) ** (
+            1.0 / 5.0
+        )
         self.f_isco = 1.0 / (6 * np.sqrt(6) * 2.0 * np.pi) * (1.0 / self.m_tot)
 
     def semimajor(self, N_orb):

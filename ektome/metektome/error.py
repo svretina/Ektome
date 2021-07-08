@@ -40,16 +40,22 @@ class Error:
         return (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y
 
     def _sphere(self, x, y, z):
-        return (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y + z * z
+        return (
+            (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y + z * z
+        )
 
     def _calculate_error_u(self):
         if (self.vanilla.s1 == 0) & (self.vanilla.s2 == 0):
             self.error_u = self.excision.u
         else:
-            self.error_u = abs(self.vanilla.u - self.excision.u) / self.vanilla.u
+            self.error_u = (
+                abs(self.vanilla.u - self.excision.u) / self.vanilla.u
+            )
 
     def _calculate_error_psi(self):
-        self.error_psi = abs(self.vanilla.psi - self.excision.psi) / self.vanilla.psi
+        self.error_psi = (
+            abs(self.vanilla.psi - self.excision.psi) / self.vanilla.psi
+        )
 
     def _calculate_error_psi_theoretical(self):
         temp = self.q / (4.0 * self.vanilla.par_b - self.q)
@@ -82,7 +88,10 @@ class Error:
             dx = unif_grid.dx
             ybounds = [-self.ex_r - dx[1], self.ex_r + dx[1]]
             zbounds = [-self.ex_r - dx[2], self.ex_r + dx[2]]
-            xbounds = [-self.par_b - self.ex_r - dx[0], -self.par_b + self.ex_r + dx[0]]
+            xbounds = [
+                -self.par_b - self.ex_r - dx[0],
+                -self.par_b + self.ex_r + dx[0],
+            ]
             # mask = np.ones(unif_grid.data.shape)*np.nan
             # print(unif_grid.data.shape)
             mask = s.loop(
@@ -109,7 +118,10 @@ class Error:
                 x, y = unif_grid.coordinates_from_grid()
                 dx, dy = unif_grid.dx
                 ybounds = [-self.ex_r - dy, self.ex_r + dy]
-                xbounds = [-self.par_b - self.ex_r - dx, -self.par_b + self.ex_r + dx]
+                xbounds = [
+                    -self.par_b - self.ex_r - dx,
+                    -self.par_b + self.ex_r + dx,
+                ]
                 mask = np.ones(unif_grid.data.shape) * np.nan
                 for j in range(y.shape[0]):
                     if y[j] < ybounds[0] or y[j] > ybounds[1]:
@@ -142,7 +154,9 @@ class Error:
                         for k in range(z.shape[0]):
                             if z[k] < zbounds[0] or z[k] > zbounds[1]:
                                 continue
-                            if self._sphere(x[i], y[j], z[k]) >= (self.ex_r ** 2):
+                            if self._sphere(x[i], y[j], z[k]) >= (
+                                self.ex_r ** 2
+                            ):
                                 mask[i, j, k] = 1
 
             data = mask * unif_grid.data

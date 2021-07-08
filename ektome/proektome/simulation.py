@@ -57,7 +57,10 @@ class Simulation:
         self.sy2 = sy2
         self.sz2 = sz2
         self.exr = exr
-        self.vanilla_base_name, self.excision_base_name = self.create_base_names()
+        (
+            self.vanilla_base_name,
+            self.excision_base_name,
+        ) = self.create_base_names()
 
     @staticmethod
     def norm(x, y, z):

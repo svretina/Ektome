@@ -62,9 +62,12 @@ def seperate_csv_in_q():
         temp1 = temp[temp["b"].isin(bs1)]
         temp2 = temp[temp["b"].isin(bs2)]
 
-        temp1.to_csv(f"{glb.results_path}/error_data_3D_q{int(q)}.csv", index=False)
+        temp1.to_csv(
+            f"{glb.results_path}/error_data_3D_q{int(q)}.csv", index=False
+        )
         temp2.to_csv(
-            f"{glb.results_path}/error_data_3D_q{int(q)}_trend.csv", index=False
+            f"{glb.results_path}/error_data_3D_q{int(q)}_trend.csv",
+            index=False,
         )
 
 
@@ -99,4 +102,6 @@ def sim_info_from_name(filename):
     s2x = float(fields[6].split("sx2")[1])
     s2y = float(fields[7].split("sy2")[1])
     s2z = float(fields[8].split("sz2")[1])
-    return dict(q=mass_ratio, b=b, s1x=s1x, s1y=s1y, s1z=s1z, s2x=s2x, s2y=s2y, s2z=s2z)
+    return dict(
+        q=mass_ratio, b=b, s1x=s1x, s1y=s1y, s1z=s1z, s2x=s2x, s2y=s2y, s2z=s2z
+    )

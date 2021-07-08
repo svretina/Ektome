@@ -60,7 +60,9 @@ def get_folders(recalc=False):
         else:
             exclude_folders = unfinished
             folders = list(
-                (Counter(vanilla_folders) - Counter(exclude_folders)).elements()
+                (
+                    Counter(vanilla_folders) - Counter(exclude_folders)
+                ).elements()
             )
     else:
         processed = get_processed_sims(vanilla_folders)
@@ -69,12 +71,14 @@ def get_folders(recalc=False):
             exclude_folders = []
             folders = vanilla_folders
         else:
-            exclude_folders = get_processed_sims(vanilla_folders) + get_unfinished_sims(
+            exclude_folders = get_processed_sims(
                 vanilla_folders
-            )
+            ) + get_unfinished_sims(vanilla_folders)
 
             folders = list(
-                (Counter(vanilla_folders) - Counter(exclude_folders)).elements()
+                (
+                    Counter(vanilla_folders) - Counter(exclude_folders)
+                ).elements()
             )
     return folders
 

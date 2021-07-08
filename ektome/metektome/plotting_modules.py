@@ -80,7 +80,9 @@ def plot_error_u_xy(error_obj):
     plt.gcf().gca().add_artist(rs_radius1)
     plt.gcf().gca().add_artist(rs_radius2)
 
-    plt.scatter([error_obj.x_at_umax], [error_obj.y_at_umax], color="green", marker="+")
+    plt.scatter(
+        [error_obj.x_at_umax], [error_obj.y_at_umax], color="green", marker="+"
+    )
 
     plt.xlim(error_obj.vanilla.xmin, error_obj.vanilla.xmax)
     plt.ylim(error_obj.vanilla.ymin, error_obj.vanilla.ymax)
@@ -179,7 +181,9 @@ def plot_u_xy(sim_obj):
         vmax=abs(sim_obj.umesh).max(),
     )
     # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-    plt.scatter([-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x")
+    plt.scatter(
+        [-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x"
+    )
     excision_sphere = plt.Circle(
         (-sim_obj.par_b, 0), sim_obj.ex_r, color="black", fill=False, ls="--"
     )
@@ -223,7 +227,9 @@ def plot_psi_xy(sim_obj):
         vmax=abs(sim_obj.psimesh).max(),
     )
     # norm= colors.Normalize(vmin=u.min(), vmax=u.max())
-    plt.scatter([-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x")
+    plt.scatter(
+        [-sim_obj.par_b, sim_obj.par_b], [0, 0], color="black", marker="x"
+    )
     excision_sphere = plt.Circle(
         (-sim_obj.par_b, 0), sim_obj.ex_r, color="black", fill=False, ls="--"
     )

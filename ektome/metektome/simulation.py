@@ -15,7 +15,9 @@ class Simulation:
         self.sim_name = sim_name
         self.sim_dir = f"{glb.simulations_path}/{self.sim_name}"
         self.param_file = f"{glb.parfiles_path}/{self.sim_name}.par"
-        self.metadata = f"{self.proj_dir}/simulations/{self.sim_name}/TwoPunctures.bbh"
+        self.metadata = (
+            f"{self.proj_dir}/simulations/{self.sim_name}/TwoPunctures.bbh"
+        )
 
         self.figure_dir = f"{self.proj_dir}/results/figures"
         self.dim = dim
@@ -139,11 +141,15 @@ class Simulation:
                         mask[i, j] = np.nan
                         continue
 
-                    if self.dim == 2 and self._circle(x[i], y[j]) < (self.ex_r ** 2):
+                    if self.dim == 2 and self._circle(x[i], y[j]) < (
+                        self.ex_r ** 2
+                    ):
                         mask[i, j] = np.nan
                     if self.dim == 3:
                         for k in range(z.shape[0]):
-                            if self._sphere(x[i], y[j], z[k]) < (self.ex_r ** 2):
+                            if self._sphere(x[i], y[j], z[k]) < (
+                                self.ex_r ** 2
+                            ):
                                 mask[i, j, k] = np.nan
 
             data = mask * unif_grid.data

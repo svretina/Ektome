@@ -157,13 +157,17 @@ def create_simulation_dict_and_submit(cfg_arr):
     """
     spin1 = list(
         itertools.product(
-            cfg_arr["minus_spin_x"], cfg_arr["minus_spin_y"], cfg_arr["minus_spin_z"]
+            cfg_arr["minus_spin_x"],
+            cfg_arr["minus_spin_y"],
+            cfg_arr["minus_spin_z"],
         )
     )
 
     spin2 = list(
         itertools.product(
-            cfg_arr["plus_spin_x"], cfg_arr["plus_spin_y"], cfg_arr["plus_spin_z"]
+            cfg_arr["plus_spin_x"],
+            cfg_arr["plus_spin_y"],
+            cfg_arr["plus_spin_z"],
         )
     )
 
