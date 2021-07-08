@@ -21,12 +21,24 @@ import numpy as np
 
 
 class Simulation:
-    def __init__(self,q=None,b=None,
-                 px1=None,py1=None,pz1=None,
-                 sx1=None,sy1=None,sz1=None,
-                 px2=None,py2=None,pz2=None,
-                 sx2=None,sy2=None,sz2=None,
-                 exr=None):
+    def __init__(
+        self,
+        q=None,
+        b=None,
+        px1=None,
+        py1=None,
+        pz1=None,
+        sx1=None,
+        sy1=None,
+        sz1=None,
+        px2=None,
+        py2=None,
+        pz2=None,
+        sx2=None,
+        sy2=None,
+        sz2=None,
+        exr=None,
+    ):
         self.q = q
         self.b = b
         self.px1 = px1
@@ -45,7 +57,7 @@ class Simulation:
         self.sy2 = sy2
         self.sz2 = sz2
         self.exr = exr
-        self.vanilla_base_name , self.excision_base_name = self.create_base_names()
+        self.vanilla_base_name, self.excision_base_name = self.create_base_names()
 
     @staticmethod
     def norm(x, y, z):
@@ -56,8 +68,9 @@ class Simulation:
         :returns: The norm value
         :rtype: np.float
         """
-        return self.norm(self.px1, self.py1, self.pz1), self.norm(self.px2, self.py2, self.pz2)
-
+        return self.norm(self.px1, self.py1, self.pz1), self.norm(
+            self.px2, self.py2, self.pz2
+        )
 
     def calculate_spin(self):
         """Calculates the norm of the effective spin for the simulation.
@@ -65,7 +78,9 @@ class Simulation:
         :rtype: np.float
         """
 
-        return self.norm(self.sx1, self.sy1, self.sz1), self.norm(self.sx2, self.sy2, self.sz2)
+        return self.norm(self.sx1, self.sy1, self.sz1), self.norm(
+            self.sx2, self.sy2, self.sz2
+        )
 
     def create_base_names(self):
         """Creates a name which serves as a base to name various
@@ -77,7 +92,7 @@ class Simulation:
         """
         tmp = []
         d = self.__dict__
-        keys = ["q","b", "sx1","sy1","sz1","sx2","sy2","sz2"]
+        keys = ["q", "b", "sx1", "sy1", "sz1", "sx2", "sy2", "sz2"]
         for i in keys:
             if "q" in i:
                 tmp.append(f"_{i}{int(d[i])}")

@@ -17,6 +17,7 @@
 
 
 from string import Template
+
 # from precactus import grid as pg
 from jhuki import grid as pg
 from jhuki.twopunctures import TwoPunctures
@@ -396,14 +397,16 @@ IOHDF5::out3D_vars              = "
         spin_minus = (self.sx_minus, self.sy_minus, self.sz_minus)
         momenta_plus = (self.px_plus, self.py_plus, self.pz_plus)
         momenta_minus = (self.px_minus, self.py_minus, self.pz_minus)
-        distance = 2*self.par_b
-        twopunctures = TwoPunctures(self.m_plus,
-                                    self.m_minus,
-                                    distance,
-                                    momenta_plus=momenta_plus,
-                                    momenta_minus=momenta_minus,
-                                    chi_plus=spin_plus,
-                                    chi_minus=spin_minus)
+        distance = 2 * self.par_b
+        twopunctures = TwoPunctures(
+            self.m_plus,
+            self.m_minus,
+            distance,
+            momenta_plus=momenta_plus,
+            momenta_minus=momenta_minus,
+            chi_plus=spin_plus,
+            chi_minus=spin_minus,
+        )
         self.twopunctures = twopunctures
         self.initial_data_section = twopunctures.parfile_code
 
@@ -472,7 +475,12 @@ IOHDF5::out3D_vars              = "
         before the two radii overlap. This can be seen as a limit
         before they overlap. It's ok if they overlap.
         """
-        n_plus = np.log2((2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor)) + 1
+        n_plus = (
+            np.log2(
+                (2 * self.par_b - d) / (self.m_plus + self.m_minus * 2 ** self.factor)
+            )
+            + 1
+        )
         n_minus = n_plus + self.factor
         self.N_plus = int(round(n_plus))
         self.N_minus = int(round(n_minus))

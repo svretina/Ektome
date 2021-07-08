@@ -34,6 +34,7 @@ import ektome.proektome.submit as sb
 import ektome.proektome.binary as bnr
 import ektome.proektome.simulation as simulation
 
+
 def read_config():
     """Reads a config file and returns a dictionary with its
     contents.
@@ -112,7 +113,8 @@ def clear_submit_metadata():
     if os.path.exists(glb.metadata_path):
         os.remove(glb.metadata_path)
 
-def my_arange(start,step,end):
+
+def my_arange(start, step, end):
     N = int((end - start) / step + 1)
     tmp = np.linspace(start, end, N)
     return np.round(tmp, 3)
@@ -135,13 +137,11 @@ def create_config_arrays(cfg_dict):
             for i in temp_array:
                 if ":" in i:
                     start, step, end = [float(j) for j in i.split(":")]
-                    array = my_arange(start,step,end)
+                    array = my_arange(start, step, end)
                     content.append(array)
                 else:
                     content.append(np.array([float(i)]))
             config_array[section] = np.sort(np.concatenate(content))
-
-
         except (ValueError, KeyError):
             config_array[section] = np.nan
     return config_array
@@ -155,13 +155,17 @@ def create_simulation_dict_and_submit(cfg_arr):
     :type cfg_arr: dict.
     :returns: Dictionary with simulation info
     """
-    spin1 = list(itertools.product(cfg_arr["minus_spin_x"],
-                                   cfg_arr["minus_spin_y"],
-                                   cfg_arr["minus_spin_z"]))
+    spin1 = list(
+        itertools.product(
+            cfg_arr["minus_spin_x"], cfg_arr["minus_spin_y"], cfg_arr["minus_spin_z"]
+        )
+    )
 
-    spin2 = list(itertools.product(cfg_arr["plus_spin_x"],
-                                   cfg_arr["plus_spin_y"],
-                                   cfg_arr["plus_spin_z"]))
+    spin2 = list(
+        itertools.product(
+            cfg_arr["plus_spin_x"], cfg_arr["plus_spin_y"], cfg_arr["plus_spin_z"]
+        )
+    )
 
     for q in cfg_arr["mass_ratio"]:
         exr = q / 2.0
@@ -176,24 +180,24 @@ def create_simulation_dict_and_submit(cfg_arr):
                     continue
                 for n_orb in cfg_arr["number_of_orbits"]:
                     b = binary.semimajor(n_orb)
-                    p1, p2 = binary.quasicircular_inspiral(q,
-                                                           2*b,
-                                                           s1,
-                                                           s2)
-                    sim = simulation.Simulation(q=q,b=b,
-                                                px1=p1[0],
-                                                py1=p1[1],
-                                                pz1=p1[2],
-                                                sx1=s1[0],
-                                                sy1=s1[1],
-                                                sz1=s1[2],
-                                                px2=p2[0],
-                                                py2=p2[1],
-                                                pz2=p2[2],
-                                                sx2=s2[0],
-                                                sy2=s2[1],
-                                                sz2=s2[2],
-                                                exr=exr)
+                    p1, p2 = binary.quasicircular_inspiral(q, 2 * b, s1, s2)
+                    sim = simulation.Simulation(
+                        q=q,
+                        b=b,
+                        px1=p1[0],
+                        py1=p1[1],
+                        pz1=p1[2],
+                        sx1=s1[0],
+                        sy1=s1[1],
+                        sz1=s1[2],
+                        px2=p2[0],
+                        py2=p2[1],
+                        pz2=p2[2],
+                        sx2=s2[0],
+                        sy2=s2[1],
+                        sz2=s2[2],
+                        exr=exr,
+                    )
                     sb.submit(sim)
 
 

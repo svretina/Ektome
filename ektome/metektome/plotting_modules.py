@@ -9,20 +9,22 @@ import ektome.globals as glb
 import tikzplotlib as tikz
 
 fig_width_pt = 510.0  # Get this from LaTeX using \showthe\columnwidth
-inches_per_pt = 1.0/72.27               # Convert pt to inch
-golden_mean = (np.sqrt(5)-1.0)/2.0         # Aesthetic ratio
-fig_width = fig_width_pt*inches_per_pt  # width in inches
-fig_height = fig_width*golden_mean      # height in inches
-fig_size =  [fig_width,fig_height]
+inches_per_pt = 1.0 / 72.27  # Convert pt to inch
+golden_mean = (np.sqrt(5) - 1.0) / 2.0  # Aesthetic ratio
+fig_width = fig_width_pt * inches_per_pt  # width in inches
+fig_height = fig_width * golden_mean  # height in inches
+fig_size = [fig_width, fig_height]
 
-params = {'backend': 'ps',
-          'font.family': 'Times New Roman',
-          'axes.labelsize': 12,
-          'legend.fontsize': 10,
-          'xtick.labelsize': 12,
-          'ytick.labelsize': 12,
-          'text.usetex': False,
-          'figure.figsize': fig_size}
+params = {
+    "backend": "ps",
+    "font.family": "Times New Roman",
+    "axes.labelsize": 12,
+    "legend.fontsize": 10,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "text.usetex": False,
+    "figure.figsize": fig_size,
+}
 
 plt.rcParams.update(params)
 
@@ -263,20 +265,21 @@ def plot_error_curve_separation(error_dict):
     else:
         data = error_dict
 
-    q = int(data['q'].unique()[0])
-    data = data[(data['s1'] <= 0.9) | (data['s2'] <= 0.9)]
+    q = int(data["q"].unique()[0])
+    data = data[(data["s1"] <= 0.9) | (data["s2"] <= 0.9)]
     # chi1 = data["s1z"]
     # chi2 = data["s2z"]
     mtot = 1 + data["q"]
     # chi_eff = ( 1 * chi1 + data["q"] * chi2)/ mtot
-    data['b/m'] = data['b']/mtot
-    data['b/m'] = data['b/m'].round(decimals=3)
-    data.sort_values(by=['b'], inplace=True)
+    data["b/m"] = data["b"] / mtot
+    data["b/m"] = data["b/m"].round(decimals=3)
+    data.sort_values(by=["b"], inplace=True)
 
-    plt.plot(data['b/m'], data['diff'])
+    plt.plot(data["b/m"], data["diff"])
     plt.title(f"mass ratio {q}")
     plt.savefig(f"{glb.results_path}/test_{q}.png")
     tikz.save(f"{glb.figures_path}/separation_{q}.tikz")
+
 
 def plot_error_xeff(error_dict):
     error_dict = f"{glb.results_path}/{error_dict}"
@@ -287,29 +290,32 @@ def plot_error_xeff(error_dict):
     else:
         data = error_dict
 
-    q = int(data['q'].unique()[0])
-    data = data[(data['s1'] <= 0.9) | (data['s2'] <= 0.9)]
-    bs = data['b'].unique()
+    q = int(data["q"].unique()[0])
+    data = data[(data["s1"] <= 0.9) | (data["s2"] <= 0.9)]
+    bs = data["b"].unique()
 
-    markers = ['D','o']
+    markers = ["D", "o"]
     colors = ["#f1a340", "#998ec3"]
 
     for index, b in enumerate(bs):
-        temp_data = data[data['b'] == b]
+        temp_data = data[data["b"] == b]
         chi1 = temp_data["s1z"]
         chi2 = temp_data["s2z"]
         mtot = 1 + temp_data["q"]
-        chi_eff = ( 1 * chi1 + temp_data["q"] * chi2) / mtot
+        chi_eff = (1 * chi1 + temp_data["q"] * chi2) / mtot
 
-        plt.scatter(chi_eff, temp_data['diff'],
-                    marker=markers[index],
-                    edgecolor=colors[index],
-                    facecolors='none',
-                    label=f"b={temp_data['b'].unique()[0]/q}")
+        plt.scatter(
+            chi_eff,
+            temp_data["diff"],
+            marker=markers[index],
+            edgecolor=colors[index],
+            facecolors="none",
+            label=f"b={temp_data['b'].unique()[0]/q}",
+        )
 
     plt.xlabel(r"$\chi_{eff}$")
     plt.title(f"q={q}")
-    plt.grid(True, 'major', axis='y')
+    plt.grid(True, "major", axis="y")
     plt.legend()
     plt.savefig(f"{glb.results_path}/test_xeff_{q}.png")
     tikz.save(f"{glb.figures_path}/xeff_{q}.tikz")

@@ -54,12 +54,12 @@ class Simulation:
         # self.p2 = np.sqrt(self.p2x * self.p2x +
         #                   self.p2y * self.p2y +
         #                   self.p2z * self.p2z)
-        self.s1 = np.sqrt(self.s1x * self.s1x +
-                          self.s1y * self.s1y +
-                          self.s1z * self.s1z)
-        self.s2 = np.sqrt(self.s2x * self.s2x +
-                          self.s2y * self.s2y +
-                          self.s2z * self.s2z)
+        self.s1 = np.sqrt(
+            self.s1x * self.s1x + self.s1y * self.s1y + self.s1z * self.s1z
+        )
+        self.s2 = np.sqrt(
+            self.s2x * self.s2x + self.s2y * self.s2y + self.s2z * self.s2z
+        )
 
     def _read_params(self):
         # bare-mass 1   => m_plus   (+)
@@ -100,15 +100,13 @@ class Simulation:
         self.u = sim.gf.xy.fields.puncture_u[0]
         self.psi = sim.gf.xy.fields.my_psi[0]
 
-
-    def _circle(self,x,y):
+    def _circle(self, x, y):
         return (x + self.par_b) * (x + self.par_b) + y * y
 
-
-    def _sphere(self,x,y,z):
+    def _sphere(self, x, y, z):
         return (x + self.par_b) * (x + self.par_b) + y * y + z * z
 
-    def calculate_max_with_mask_3D(self,var):
+    def calculate_max_with_mask_3D(self, var):
         maxs = []
         for _ref_level, _comp_index, unif_grid in var:
             x, y, z = unif_grid.coordinates_from_grid()
@@ -117,18 +115,15 @@ class Simulation:
                 for i in range(x.shape[0]):
                     for k in range(z.shape[0]):
                         if x[i] > 0:
-                            mask[i,j,k] = np.nan
+                            mask[i, j, k] = np.nan
                             continue
-                        if self._sphere(x[i],y[j],z[k]) < (self.ex_r**2):
-                            mask[i,j,k] = np.nan
+                        if self._sphere(x[i], y[j], z[k]) < (self.ex_r ** 2):
+                            mask[i, j, k] = np.nan
 
             data = mask * unif_grid.data
             if not np.isnan(data).all():
                 maxs.append(np.nanmax(data))
         return np.nanmax(maxs)
-
-
-
 
     def calculate_max_with_mask(self, var):
         maxs = []
@@ -141,17 +136,15 @@ class Simulation:
             for j in range(y.shape[0]):
                 for i in range(x.shape[0]):
                     if x[i] > 0:
-                        mask[i,j] = np.nan
+                        mask[i, j] = np.nan
                         continue
 
-                    if self.dim == 2 and self._circle(x[i],y[j]) < (self.ex_r**2):
-                            mask[i,j] = np.nan
+                    if self.dim == 2 and self._circle(x[i], y[j]) < (self.ex_r ** 2):
+                        mask[i, j] = np.nan
                     if self.dim == 3:
                         for k in range(z.shape[0]):
-                            if self._sphere(x[i],y[j],z[k]) < (self.ex_r**2):
-                                mask[i,j,k] = np.nan
-
-
+                            if self._sphere(x[i], y[j], z[k]) < (self.ex_r ** 2):
+                                mask[i, j, k] = np.nan
 
             data = mask * unif_grid.data
             if not np.isnan(data).all():

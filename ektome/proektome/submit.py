@@ -86,12 +86,13 @@ def write_submit_metadata(cluster_id, base_name):
     with open(glb.metadata_path, "a") as metadata:
         metadata.write(f"{base_name},{cluster_id}\n")
 
+
 def get_info_from_folder_name(folder_name):
     # excision_q100_b639_sx1-0.1_sy1-0.9_sz1-0.1_sx20.1_sy20.1_sz20.9
     pieces = folder_name.split("_")
     d = {}
     d["q"] = int(pieces[1][1:])
-    d["exr"] = int(d["q"]/2)
+    d["exr"] = int(d["q"] / 2)
     d["sx1"] = float(pieces[3][3:])
     d["sy1"] = float(pieces[4][3:])
     d["sz1"] = float(pieces[5][3:])
@@ -104,6 +105,7 @@ def get_info_from_folder_name(folder_name):
 def check_output_dir(dir1):
     if not os.path.exists(dir1):
         create_sim_dir(dir1)
+
 
 def check_existence_simulation(simulation_folder_name):
     """Checks if a simulation already exists and is finished.
@@ -129,11 +131,10 @@ def submit(simulation):
     want2submit = True
     print("Submiting simulations for:")
     print(vanilla_base_name.split("vanilla_")[1])
-    print(30*"==")
+    print(30 * "==")
 
     if not check_existence_simulation(vanilla_base_name):
-        vanilla_parfile = p.Parameter_File(simulation,
-                                           excision=False, N=1)
+        vanilla_parfile = p.Parameter_File(simulation, excision=False, N=1)
         vanilla_parfile.write_parfile()
         vnl_sub = csf.create_sub_dict(vanilla_base_name)
         vanilla_sim_dir = create_sim_dir(vanilla_base_name)
@@ -142,9 +143,7 @@ def submit(simulation):
             vnl_id = submit_simulation(vnl_sub)
             write_submit_metadata(vnl_id, vanilla_base_name)
 
-
-    excision_parfile = p.Parameter_File(simulation,
-                                        excision=True, N=1)
+    excision_parfile = p.Parameter_File(simulation, excision=True, N=1)
 
     excision_parfile.write_parfile()
 

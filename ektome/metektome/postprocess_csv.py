@@ -23,8 +23,8 @@ import pandas as pd
 import ektome.globals as glb
 
 data = pd.read_csv(f"{glb.results_path}/error_data3Dpythran_final.csv")
-data['q'] = data['q'].round(decimals=0)
-qs = data['q'].unique()
+data["q"] = data["q"].round(decimals=0)
+qs = data["q"].unique()
 
 
 def check_if_processed():
@@ -32,52 +32,57 @@ def check_if_processed():
     bools = []
     for q in qs:
         q = int(q)
-        if os.path.isfile(f'{prefix}{q}.csv'):
+        if os.path.isfile(f"{prefix}{q}.csv"):
             bools.append(True)
-        if os.path.isfile(f'{prefix}{q}_trend.csv'):
+        if os.path.isfile(f"{prefix}{q}_trend.csv"):
             bools.append(True)
     return np.prod(bools)
 
+
 def seperate_csv_in_q():
 
-    data['b'] = data['b']/2
-    data['b'] = data['b'].round(decimals=0)
-    data['s2x'] = data['s2x']/(data['q']**2)
-    data['s2y'] = data['s2y']/(data['q']**2)
-    data['s2z'] = data['s2z']/(data['q']**2)
-    data['s2'] = data['s2']/(data['q']**2)
-    data['diff'] = data['max_error_psi_theoretical'] - data['max_error_psi']
+    data["b"] = data["b"] / 2
+    data["b"] = data["b"].round(decimals=0)
+    data["s2x"] = data["s2x"] / (data["q"] ** 2)
+    data["s2y"] = data["s2y"] / (data["q"] ** 2)
+    data["s2z"] = data["s2z"] / (data["q"] ** 2)
+    data["s2"] = data["s2"] / (data["q"] ** 2)
+    data["diff"] = data["max_error_psi_theoretical"] - data["max_error_psi"]
 
     exclude_bad_sims(data, f"{glb.proj_path}/nans.dat")
     for q in qs:
-        temp = data[data['q'] == q]
-        counts = temp['b'].value_counts().to_frame()
-        counts.reset_index(level=0,inplace=True)
-        counts.columns = ["b","counts"]
+        temp = data[data["q"] == q]
+        counts = temp["b"].value_counts().to_frame()
+        counts.reset_index(level=0, inplace=True)
+        counts.columns = ["b", "counts"]
 
-        bs1 = counts[counts['counts'] > 100]['b'].tolist()
-        bs2 = counts[~(counts['counts'] > 100)]['b'].tolist()
+        bs1 = counts[counts["counts"] > 100]["b"].tolist()
+        bs2 = counts[~(counts["counts"] > 100)]["b"].tolist()
 
-        temp1 = temp[temp['b'].isin(bs1)]
-        temp2 = temp[temp['b'].isin(bs2)]
+        temp1 = temp[temp["b"].isin(bs1)]
+        temp2 = temp[temp["b"].isin(bs2)]
 
-        temp1.to_csv(f"{glb.results_path}/error_data_3D_q{int(q)}.csv",index=False)
-        temp2.to_csv(f"{glb.results_path}/error_data_3D_q{int(q)}_trend.csv", index=False)
+        temp1.to_csv(f"{glb.results_path}/error_data_3D_q{int(q)}.csv", index=False)
+        temp2.to_csv(
+            f"{glb.results_path}/error_data_3D_q{int(q)}_trend.csv", index=False
+        )
 
 
 def exclude_bad_sims(df, filename):
-    with open(filename,"r") as fl:
+    with open(filename, "r") as fl:
         lines = fl.readlines()
 
         for line in lines:
             info = sim_info_from_name(line)
-            idx = df.index[(df["q"] == info["q"]) &
-                           (df["s1x"] == info["s1x"]) &
-                           (df["s1y"] == info["s1y"]) &
-                           (df["s1z"] == info["s1z"]) &
-                           (df["s2x"] == info["s2x"]) &
-                           (df["s2y"] == info["s2y"]) &
-                           (df["s2z"] == info["s2z"])]
+            idx = df.index[
+                (df["q"] == info["q"])
+                & (df["s1x"] == info["s1x"])
+                & (df["s1y"] == info["s1y"])
+                & (df["s1z"] == info["s1z"])
+                & (df["s2x"] == info["s2x"])
+                & (df["s2y"] == info["s2y"])
+                & (df["s2z"] == info["s2z"])
+            ]
 
             df.drop(index=idx, inplace=True)
     return df
@@ -94,11 +99,4 @@ def sim_info_from_name(filename):
     s2x = float(fields[6].split("sx2")[1])
     s2y = float(fields[7].split("sy2")[1])
     s2z = float(fields[8].split("sz2")[1])
-    return dict(q=mass_ratio,
-                b=b,
-                s1x=s1x,
-                s1y=s1y,
-                s1z=s1z,
-                s2x=s2x,
-                s2y=s2y,
-                s2z=s2z)
+    return dict(q=mass_ratio, b=b, s1x=s1x, s1y=s1y, s1z=s1z, s2x=s2x, s2y=s2y, s2z=s2z)
