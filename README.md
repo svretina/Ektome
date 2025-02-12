@@ -4,3 +4,8 @@ license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.cran
 # EkTome
 
 EkTome is a Python library to prepare and submit simulations for the Einstein Toolkit using the excision technique for IMRI systems.
+
+the modified TwoPunctures code is located at
+~/opt/Cactus/repos/einsteininitialdata/TwoPunctures/src
+in the condor cluster at AEI Hannover
+ssh condor
