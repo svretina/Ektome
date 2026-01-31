@@ -34,6 +34,16 @@ uv sync
 
 ---
 
+## 🖥️ Cluster Environment (AEI Hannover)
+
+Ektome is optimized for the **AEI Hannover HTCondor cluster** (`ssh condor`).
+
+> [!NOTE]
+> The modified **TwoPunctures** source code used by this toolkit is located at:
+> `~/opt/Cactus/repos/einsteininitialdata/TwoPunctures/src`
+
+---
+
 ## 🚦 Quick Start
 
 ### Submitting a Simulation
