@@ -1,158 +1,153 @@
 #!/usr/bin/env python3
 
-import sys
-import numpy as np
-import numpy.ma as ma
-import matplotlib.pyplot as plt
-from kuibit.simdir import SimDir
-import ektome.globals as glb
+# Copyright (C) 2021 Stamatis Vretinaris
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, see <https://www.gnu.org/licenses/>.
+
+"""This module provides a class to represent and load simulation data."""
+
+import logging
 import re
+from pathlib import Path
+
+import numpy as np
+from kuibit.simdir import SimDir
+
+import ektome.globals as glb
+from ektome.exceptions import SimulationNotFoundError
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class Simulation:
-    def __init__(self, sim_name, dim=2):
-        self.proj_dir = glb.proj_path
-        self.sim_name = sim_name
-        self.sim_dir = f"{glb.simulations_path}/{self.sim_name}"
-        self.param_file = f"{glb.parfiles_path}/{self.sim_name}.par"
-        self.metadata = (
-            f"{self.proj_dir}/simulations/{self.sim_name}/TwoPunctures.bbh"
-        )
+    """Represents a simulation, providing methods to load parameters and data.
 
-        self.figure_dir = f"{self.proj_dir}/results/figures"
+    Attributes:
+        sim_name: Name of the simulation.
+        dim: Dimensionality of the data (2 or 3).
+        sim_dir: Path to the simulation data.
+        param_file: Path to the parameter file.
+        metadata_file: Path to the metadata file (TwoPunctures.bbh).
+    """
+
+    def __init__(self, sim_name: str, dim: int = 3) -> None:
+        """Initializes the Simulation object.
+
+        Args:
+            sim_name: Name of the simulation folder.
+            dim: Dimension of the simulation data.
+
+        Raises:
+            SimulationNotFoundError: If the simulation directory or metadata is missing.
+        """
+        self.sim_name = sim_name
         self.dim = dim
-        self.base_name = "_".join(self.sim_dir.split("_")[1:])
+        self.sim_dir = glb.SIMULATIONS_PATH / self.sim_name
+        self.param_file = glb.PARFILES_PATH / f"{self.sim_name}.par"
+        self.metadata_file = self.sim_dir / "TwoPunctures.bbh"
+
+        if not self.sim_dir.exists():
+            raise SimulationNotFoundError(f"Simulation directory not found: {self.sim_dir}")
+        if not self.metadata_file.exists():
+            # Fallback check if it's in a different location or named differently
+            logger.warning(f"Metadata file {self.metadata_file} not found.")
+
         self._read_params()
         self._calculate_norms()
+        
         if self.dim == 2:
-            self._load_data_2D()
+            self._load_data_2d()
         else:
-            self._load_data_3D()
-        # self.umax = self.calculate_max_with_mask(self.u)
-        # self.psimax = self.calculate_max_with_mask(self.psi)
+            self._load_data_3d()
 
-    @staticmethod
-    def get_line(string, fl):
-        file = open(fl, "r")
-        for line in file:
-            if re.search(string, line):
-                tmp = line
-                break
-        file.close()
-        return tmp
+    def _get_param_value(self, param_name: str, file_path: Path) -> float:
+        """Parses a numerical value for a parameter from a file.
 
-    @staticmethod
-    def get_nvalue(line):
-        val = line.split("=")[1]
-        return float(val)
+        Args:
+            param_name: The name of the parameter to look for.
+            file_path: The file to search in.
 
-    def read_param(self, param, fl):
-        return self.get_nvalue(self.get_line(param, fl))
+        Returns:
+            The parsed float value.
 
-    def _calculate_norms(self):
-        # self.p1 = np.sqrt(self.p1x * self.p1x +
-        #                   self.p1y * self.p1y +
-        #                   self.p1z * self.p1z)
-        # self.p2 = np.sqrt(self.p2x * self.p2x +
-        #                   self.p2y * self.p2y +
-        #                   self.p2z * self.p2z)
-        self.s1 = np.sqrt(
-            self.s1x * self.s1x + self.s1y * self.s1y + self.s1z * self.s1z
-        )
-        self.s2 = np.sqrt(
-            self.s2x * self.s2x + self.s2y * self.s2y + self.s2z * self.s2z
-        )
+        Raises:
+            ValueError: If the parameter is not found or cannot be parsed.
+        """
+        if not file_path.exists():
+            raise FileNotFoundError(f"File {file_path} not found while reading {param_name}")
 
-    def _read_params(self):
-        # bare-mass 1   => m_plus   (+)
-        # base-mass 2   => m_minus  (-)
-        self.mm = self.read_param("adm-mass2", self.metadata)
-        self.mp = self.read_param("adm-mass1", self.metadata)
-        self.par_b = self.read_param("separation", self.metadata)
-        self.ex_r = self.read_param("excision", self.metadata)
+        pattern = re.compile(rf"{param_name}\s*=\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)")
+        
+        with open(file_path) as f:
+            for line in f:
+                match = pattern.search(line)
+                if match:
+                    return float(match.group(1))
+        
+        raise ValueError(f"Parameter '{param_name}' not found in {file_path}")
 
-        self.dx = self.read_param("dx", self.param_file)
-        self.dy = self.read_param("dy", self.param_file)
-        self.dz = self.read_param("dz", self.param_file)
+    def _calculate_norms(self) -> None:
+        """Calculates spin norms for both punctures."""
+        self.s1 = np.sqrt(self.s1x**2 + self.s1y**2 + self.s1z**2)
+        self.s2 = np.sqrt(self.s2x**2 + self.s2y**2 + self.s2z**2)
 
-        # Careful !
-        # in TwoPunctures.bbh:
-        # 1 cooresponds to the (+) puncture
-        # 2 coorespoinds to the (-) puncture
-        # in our package:
-        # 1 cooresponds to the (-) puncture
-        # 2 cooresponds to the (+) puncture
+    def _read_params(self) -> None:
+        """Reads simulation parameters from metadata and parameter files."""
+        try:
+            # ADM masses and separation from metadata
+            self.mm = self._get_param_value("adm-mass2", self.metadata_file)
+            self.mp = self._get_param_value("adm-mass1", self.metadata_file)
+            self.par_b = self._get_param_value("separation", self.metadata_file)
+            self.ex_r = self._get_param_value("excision", self.metadata_file)
 
-        self.s1x = self.read_param("spin2x", self.metadata)
-        self.s1y = self.read_param("spin2y", self.metadata)
-        self.s1z = self.read_param("spin2z", self.metadata)
-        self.s2x = self.read_param("spin1x", self.metadata)
-        self.s2y = self.read_param("spin1y", self.metadata)
-        self.s2z = self.read_param("spin1z", self.metadata)
+            # Grid spacing from parameter file
+            self.dx = self._get_param_value("dx", self.param_file)
+            self.dy = self._get_param_value("dy", self.param_file)
+            self.dz = self._get_param_value("dz", self.param_file)
 
-    def _load_data_3D(self):
-        sim = SimDir(self.sim_dir)
-        # u[integration][refinement_level][components]
+            # Spins from metadata
+            # Note: Mapping might be reversed as per legacy comments
+            self.s1x = self._get_param_value("spin2x", self.metadata_file)
+            self.s1y = self._get_param_value("spin2y", self.metadata_file)
+            self.s1z = self._get_param_value("spin2z", self.metadata_file)
+            self.s2x = self._get_param_value("spin1x", self.metadata_file)
+            self.s2y = self._get_param_value("spin1y", self.metadata_file)
+            self.s2z = self._get_param_value("spin1z", self.metadata_file)
+        except (ValueError, FileNotFoundError) as exc:
+            logger.error(f"Error reading parameters for {self.sim_name}: {exc}")
+            # Assign defaults or re-raise
+            raise SimulationNotFoundError(f"Missing required parameters in {self.sim_name}") from exc
+
+    def _load_data_3d(self) -> None:
+        """Loads 3D gravitational field data using kuibit."""
+        logger.info(f"Loading 3D data for {self.sim_name}...")
+        sim = SimDir(str(self.sim_dir))
         self.u = sim.gf.xyz.fields.puncture_u[0]
         self.psi = sim.gf.xyz.fields.my_psi[0]
 
-    def _load_data_2D(self):
-        sim = SimDir(self.sim_dir)
-        # u[integration][refinement_level][components]
+    def _load_data_2d(self) -> None:
+        """Loads 2D gravitational field data using kuibit."""
+        logger.info(f"Loading 2D data for {self.sim_name}...")
+        sim = SimDir(str(self.sim_dir))
         self.u = sim.gf.xy.fields.puncture_u[0]
         self.psi = sim.gf.xy.fields.my_psi[0]
 
-    def _circle(self, x, y):
-        return (x + self.par_b) * (x + self.par_b) + y * y
+    def _sphere_dist_sq(self, x, y, z) -> float:
+        """Calculates distance squared from the first puncture."""
+        return (x + self.par_b)**2 + y**2 + z**2
 
-    def _sphere(self, x, y, z):
-        return (x + self.par_b) * (x + self.par_b) + y * y + z * z
-
-    def calculate_max_with_mask_3D(self, var):
-        maxs = []
-        for _ref_level, _comp_index, unif_grid in var:
-            x, y, z = unif_grid.coordinates_from_grid()
-            mask = np.ones(unif_grid.data.shape)
-            for j in range(y.shape[0]):
-                for i in range(x.shape[0]):
-                    for k in range(z.shape[0]):
-                        if x[i] > 0:
-                            mask[i, j, k] = np.nan
-                            continue
-                        if self._sphere(x[i], y[j], z[k]) < (self.ex_r ** 2):
-                            mask[i, j, k] = np.nan
-
-            data = mask * unif_grid.data
-            if not np.isnan(data).all():
-                maxs.append(np.nanmax(data))
-        return np.nanmax(maxs)
-
-    def calculate_max_with_mask(self, var):
-        maxs = []
-        for _ref_level, _comp_index, unif_grid in var:
-            if self.dim == 2:
-                x, y = unif_grid.coordinates_from_grid()
-            elif self.dim == 3:
-                x, y, z = unif_grid.coordinates_from_grid()
-            mask = np.ones(unif_grid.data.shape)
-            for j in range(y.shape[0]):
-                for i in range(x.shape[0]):
-                    if x[i] > 0:
-                        mask[i, j] = np.nan
-                        continue
-
-                    if self.dim == 2 and self._circle(x[i], y[j]) < (
-                        self.ex_r ** 2
-                    ):
-                        mask[i, j] = np.nan
-                    if self.dim == 3:
-                        for k in range(z.shape[0]):
-                            if self._sphere(x[i], y[j], z[k]) < (
-                                self.ex_r ** 2
-                            ):
-                                mask[i, j, k] = np.nan
-
-            data = mask * unif_grid.data
-            if not np.isnan(data).all():
-                maxs.append(np.nanmax(data))
-        return np.nanmax(maxs)
+    def _circle_dist_sq(self, x, y) -> float:
+        """Calculates distance squared from the first puncture in 2D."""
+        return (x + self.par_b)**2 + y**2

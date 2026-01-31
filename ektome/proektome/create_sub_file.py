@@ -15,44 +15,46 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <https://www.gnu.org/licenses/>.
 
+"""This module provides helper functions to write submit files."""
 
-"""This module provides helper functions to write submit files.
-The functions available are:
-- :py:func:`~.create_sub_file`: Writes a submition file.
-"""
+from typing import Any, Dict
 
 import ektome.globals as glb
 
 
-def create_sub_dict(base_name):
-    """Writes the submition file.
+def create_sub_dict(base_name: str) -> Dict[str, Any]:
+    """Creates a dictionary containing the HTCondor submission information.
 
-    :param simulation: Dictionary containing simulation info.
-    :type simulation: dict
-    :param: proj_path: Path of project directory.
-    :type proj_path: str
-    :param base_name: Name string that serves as a base to name parameter files.
-    :type base_name: str
-    :returns: A Dictionary with the submition info
-    :rtype: dict
+    Args:
+        base_name: Name string that serves as a base to name parameter files.
+
+    Returns:
+        A dictionary with the submission info.
     """
-
-    par_file_path = "/".join((glb.parfiles_path, base_name + ".par"))
+    par_file_path = glb.PARFILES_PATH / f"{base_name}.par"
+    
     # How much memory to request
-    b = int(base_name.split("_")[2].split("b")[1])
-    if 1000 < b <= 100:
-        memory = "15000MB"
-    elif b >= 1000:
-        memory = "12000MB"
+    try:
+        b_val = int(base_name.split("_")[2].split("b")[1])
+    except (IndexError, ValueError):
+        b_val = 0
 
-    sim_dir = "/".join((glb.simulations_path, base_name))
-    sub_file_dict = {
+    if 100 < b_val <= 1000:
+        memory = "15000MB"
+    elif b_val > 1000:
+        memory = "12000MB"
+    else:
+        memory = "8000MB"  # Default fallback
+
+    sim_dir = glb.SIMULATIONS_PATH / base_name
+    
+    sub_file_dict: Dict[str, Any] = {
         "executable": "/work/stamatis.vretinaris/opt/Cactus/exe/cactus_sim",
-        "arguments": par_file_path,
+        "arguments": str(par_file_path),
         "universe": "vanilla",
-        "output": sim_dir + "/out",
-        "error": sim_dir + "/err",
-        "log": sim_dir + "/log",
+        "output": str(sim_dir / "out"),
+        "error": str(sim_dir / "err"),
+        "log": str(sim_dir / "log"),
         "accounting_group": "cbc.prod.initial_data",
         "request_cpus": 5,
         "getenv": "True",
@@ -61,6 +63,5 @@ def create_sub_dict(base_name):
         "on_exit_hold": "( ExitCode != 0 )",
         "kill_sig": "15",
     }
-    # "request_memory":f"max({{{memory}, Target.TotalSlotMemory}})",
 
     return sub_file_dict

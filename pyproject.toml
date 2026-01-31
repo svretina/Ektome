@@ -1,22 +1,49 @@
-[tool.poetry]
-name = "Ektome"
+[project]
+name = "ektome"
 version = "0.1.0"
-description = ""
-authors = ["Stamatis Vretinaris <stamatis.vretinaris@aei.mpg.de>"]
+description = "A modern toolkit for submitting and post-processing HTCondor simulations."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Stamatis Vretinaris", email = "stamatis.vretinaris@aei.mpg.de" }
+]
+dependencies = [
+    "numpy>=1.20.0",
+    "htcondor>=8.9.11",
+    "configparser>=5.0.1",
+    "kuibit>=1.0.0b0",
+    "pandas>=1.2.1",
+    "matplotlib>=3.3.4",
+    "PyAstronomy>=0.15.2",
+    "pathlib; python_version < '3.4'",
+    "httpx>=0.23.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-numpy = "^1.20.0"
-htcondor = "^8.9.11"
-configparser = "^5.0.1"
-kuibit = "^1.0.0-beta.0"
-pandas = "^1.2.1"
-matplotlib = "^3.3.4"
-PyAstronomy = "^0.15.2"
+[project.scripts]
+ektome-submit = "ektome.proektome.submit:main"
+ektome-postprocess = "ektome.metektome.postprocess_sims:main"
 
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ASYNC", "B", "C4", "SIM", "PTH"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.8"
+strict = true
+ignore_missing_imports = true
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

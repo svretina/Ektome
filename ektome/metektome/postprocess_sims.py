@@ -17,139 +17,151 @@
 
 """This module provides functions to post process the simulation data."""
 
-import os
-import sys
+import logging
+from concurrent.futures import ProcessPoolExecutor
+from typing import List, Optional
+
 import pandas as pd
-from collections import Counter
-from multiprocessing import Pool
-import multiprocessing
+
 import ektome.globals as glb
 import ektome.metektome.error as e
-import ektome.metektome.simulation as sim
-import ektome.metektome.plotting_modules as pm
-import time
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
-def get_processed_sims(folders):
-    processed_folders = []
+def get_processed_sims(folders: List[str]) -> List[str]:
+    """Identifies folders that have already been processed.
+
+    Args:
+        folders: List of folder names to check.
+
+    Returns:
+        List of folders containing 'psi.png'.
+    """
+    processed = []
     for folder in folders:
-        sim_path = f"{glb.simulations_path}/{folder}"
-        if os.path.exists(f"{sim_path}/psi.png"):
-            processed_folders.append(folder)
-    return processed_folders
+        if (glb.SIMULATIONS_PATH / folder / "psi.png").exists():
+            processed.append(folder)
+    return processed
 
 
-def get_unfinished_sims(folders):
-    unfinished_folders = []
+def get_unfinished_sims(folders: List[str]) -> List[str]:
+    """Identifies folders where the simulation is not yet finished.
+
+    Args:
+        folders: List of folder names to check.
+
+    Returns:
+        List of folders missing 'TwoPunctures.bbh'.
+    """
+    unfinished = []
     for folder in folders:
-        sim_path = f"{glb.simulations_path}/{folder}"
-        if not os.path.exists(f"{sim_path}/TwoPunctures.bbh"):
-            unfinished_folders.append(folder)
-    return unfinished_folders
+        if not (glb.SIMULATIONS_PATH / folder / "TwoPunctures.bbh").exists():
+            unfinished.append(folder)
+    return unfinished
 
 
-def get_folders(recalc=False):
-    print("Getting folders to process...")
-    sim_folders = os.listdir(glb.simulations_path)
+def get_folders(recalc: bool = False) -> List[str]:
+    """Gets the list of vanilla simulation folders that need processing.
+
+    Args:
+        recalc: If True, includes already processed folders.
+
+    Returns:
+        A list of folder names.
+    """
+    logger.info("Scanning simulations directory...")
+    if not glb.SIMULATIONS_PATH.exists():
+        logger.warning(f"Simulations path {glb.SIMULATIONS_PATH} does not exist.")
+        return []
+
+    sim_folders = [f.name for f in glb.SIMULATIONS_PATH.iterdir() if f.is_dir()]
     vanilla_folders = [x for x in sim_folders if x.startswith("vanilla")]
-    if recalc:
-        unfinished = get_unfinished_sims(vanilla_folders)
-        if not unfinished:
-            exclude_folders = []
-            folders = vanilla_folders
-        else:
-            exclude_folders = unfinished
-            folders = list(
-                (
-                    Counter(vanilla_folders) - Counter(exclude_folders)
-                ).elements()
-            )
-    else:
-        processed = get_processed_sims(vanilla_folders)
-        unfinished = get_unfinished_sims(vanilla_folders)
-        if not processed and not unfinished:
-            exclude_folders = []
-            folders = vanilla_folders
-        else:
-            exclude_folders = get_processed_sims(
-                vanilla_folders
-            ) + get_unfinished_sims(vanilla_folders)
 
-            folders = list(
-                (
-                    Counter(vanilla_folders) - Counter(exclude_folders)
-                ).elements()
-            )
+    unfinished = get_unfinished_sims(vanilla_folders)
+    
+    if recalc:
+        # Exclude only unfinished
+        folders = [f for f in vanilla_folders if f not in unfinished]
+    else:
+        # Exclude processed AND unfinished
+        processed = get_processed_sims(vanilla_folders)
+        exclude = set(processed) | set(unfinished)
+        folders = [f for f in vanilla_folders if f not in exclude]
+
+    logger.info(f"Found {len(folders)} folders to process.")
     return folders
 
 
-def get_error_dataframe(folder):
-    print(folder)
+def get_error_dataframe(folder: str) -> pd.DataFrame:
+    """Calculates error information for a single simulation folder.
+
+    Args:
+        folder: The folder name.
+
+    Returns:
+        A DataFrame containing the error report.
+    """
+    logger.debug(f"Processing folder: {folder}")
     try:
         err = e.Error(folder, dim=3)
-        info = err.error_report()
-        # info.to_csv(f"error_data3Dcython.csv",
-        #             mode='a', header=False, index=False)
-        return info
-    except FileNotFoundError:
+        return err.error_report()
+    except Exception as exc:
+        logger.error(f"Failed to process {folder}: {exc}")
         return pd.DataFrame()
 
 
-def parallel_loop_over_folders(save=True, recalc=False, n_cpus=None):
+def run_postprocessing(
+    save: bool = True, recalc: bool = False, n_cpus: Optional[int] = None
+) -> pd.DataFrame:
+    """Runs the post-processing loop over folders, optionally in parallel.
+
+    Args:
+        save: Whether to save the results to CSV.
+        recalc: Whether to re-process folders.
+        n_cpus: Number of CPUs to use for parallel processing.
+
+    Returns:
+        A concatenated DataFrame of all results.
+    """
     folders = get_folders(recalc)
-    print("Starting folder parsing...")
-    with Pool(processes=n_cpus) as pool:
-        result = pool.map(get_error_dataframe, folders)
+    if not folders:
+        return pd.DataFrame()
 
-    error_info = pd.concat(result, ignore_ixndex=True)
-    print("end")
+    logger.info(f"Starting post-processing with {n_cpus or 'default'} workers...")
+    
+    results = []
+    with ProcessPoolExecutor(max_workers=n_cpus) as executor:
+        results = list(executor.map(get_error_dataframe, folders))
 
+    if not results:
+        return pd.DataFrame()
+
+    error_info = pd.concat(results, ignore_index=True)
+    
     if save:
-        if recalc:
-            error_info.to_csv(
-                f"{glb.results_path}/error_data3D.csv",
-                mode="w",
-                header=True,
-                index=False,
-            )
-        else:
-            error_info.to_csv(
-                f"{glb.results_path}/error_data3D.csv",
-                mode="a",
-                header=False,
-                index=False,
-            )
+        output_path = glb.RESULTS_PATH / "error_data3D.csv"
+        glb.RESULTS_PATH.mkdir(parents=True, exist_ok=True)
+        
+        mode = "w" if recalc else "a"
+        header = recalc or not output_path.exists()
+        
+        error_info.to_csv(output_path, mode=mode, header=header, index=False)
+        logger.info(f"Results saved to {output_path}")
+
     return error_info
 
 
-def serial_loop_over_folders(save=True, recalc=False):
-    folders = get_folders(recalc)
-    error_info = pd.DataFrame()
-    num_of_folders = len(folders)
-    print("Serial loop")
-    print(f"Number of files to process: {num_of_folders}")
-    for idx, folder in enumerate(folders):
-        print(f"{idx+1}/{num_of_folders}", folder)
-        try:
-            err = e.Error(folder, dim=3)
-        except FileNotFoundError:
-            continue
-        info = err.error_report()
-        # info.to_csv(f"{glb.results_path}/error_data3Dpythran.csv",
-        #            mode='a', header=False, index=False)
-        error_info = error_info.append(info, ignore_index=True)
-    if save:
-        if recalc:
-            error_info.to_csv(
-                f"{glb.results_path}/error_data3Dpythran_final.csv",
-                mode="w",
-                index=False,
-            )
-        else:
-            error_info.to_csv(
-                f"{glb.results_path}/error_data3Dpythran_final.csv",
-                mode="a",
-                header=False,
-                index=False,
-            )
-    return error_info
+def main() -> None:
+    """CLI entry point for post-processing."""
+    run_postprocessing()
+
+
+if __name__ == "__main__":
+    main()

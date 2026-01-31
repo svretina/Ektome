@@ -18,10 +18,12 @@
 
 from string import Template
 
+import numpy as np
+
 # from precactus import grid as pg
 from jhuki import grid as pg
 from jhuki.twopunctures import TwoPunctures
-import numpy as np
+
 import ektome.globals as glb
 
 

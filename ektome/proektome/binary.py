@@ -21,14 +21,9 @@ orbits.
 The functions available are:
 """
 
-import os
-import sys
-import math
 import numpy as np
-from PyAstronomy import pyasl
 from jhuki.twopunctures import prepare_quasicircular_inspiral
-
-import ektome.globals as glb
+from PyAstronomy import pyasl
 
 
 class Binary:

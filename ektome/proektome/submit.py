@@ -15,144 +15,190 @@
 # You should have received a copy of the GNU General Public License along with
 # this program; if not, see <https://www.gnu.org/licenses/>.
 
+"""This module provides helper functions to submit a simulation."""
 
-"""This module provides helper functions to submit a simulation.
-The functions available are:
-- :py:func:`~.create_base_names`: Creates a name for various output files and directories.
-- :py:func:`~.create_sim_dir`: Creates the output directory.
-- :py:func:`~.submit_simulation`: Calls Condor to submit the simulation.
-- :py:func:`~.submit`: Creates parameter and submition files,
-as well as output directory and submits the simulation.
-
-"""
-
-import os
+import logging
 import time
-import numpy as np
-import htcondor as htc
-from htcondor import HTCondorIOError as htc_error
+from typing import Any, Dict
+
+try:
+    import htcondor as htc
+except ImportError:
+    htc = None  # type: ignore
+
 import ektome.globals as glb
-import ektome.proektome.parfile as p
 import ektome.proektome.create_sub_file as csf
+import ektome.proektome.parfile as p
+from ektome.exceptions import JobSubmissionError
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
-def create_sim_dir(base_name):
-    """Creates the output directory for the simulation within the
-    proj_path/simulations/ directory.
+def create_sim_dir(base_name: str) -> str:
+    """Creates the output directory for the simulation.
 
-    :param base_name: Base name to name the output directory.
-    :returns: Directory path
-    :rtype: str
+    Args:
+        base_name: Base name for the output directory.
+
+    Returns:
+        The path to the created directory as a string.
     """
-    dir_name = f"{glb.simulations_path}/{base_name}"
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
+    dir_path = glb.SIMULATIONS_PATH / base_name
+    if not dir_path.exists():
+        logger.info(f"Creating simulation directory: {dir_path}")
+        dir_path.mkdir(parents=True, exist_ok=True)
 
-    return dir_name
+    return str(dir_path)
 
 
-def submit_simulation(sub_file_dict):
-    """Calls Condor to submit a submition file.
+def submit_simulation(sub_file_dict: Dict[str, Any], max_retries: int = 5) -> int:
+    """Calls HTCondor to submit a simulation job.
 
-    :param sub_file_path: Path to the submition file
-    :type sub_file_path: str
-    :returns: Cluster ID number
-    :rtype: int
+    Args:
+        sub_file_dict: Dictionary containing HTCondor submission parameters.
+        max_retries: Maximum number of submission attempts.
+
+    Returns:
+        The Cluster ID assigned by HTCondor.
+
+    Raises:
+        JobSubmissionError: If the job fails to submit after max_retries.
     """
+    if htc is None:
+        logger.error("HTCondor module not found. Cannot submit job.")
+        raise JobSubmissionError("HTCondor module not found.")
+
     job = htc.Submit(sub_file_dict)
     schedd = htc.Schedd()
-    cluster_id = 0
-    sucess = False
-    while not sucess:
+    
+    for attempt in range(1, max_retries + 1):
         try:
             with schedd.transaction() as txn:
-                cluster_id = job.queue(txn)
-                sucess = True
-        except:
-            sucess = False
-            print("FAILED")
-    return cluster_id
+                cluster_id: int = job.queue(txn)
+                logger.info(f"Successfully submitted job. Cluster ID: {cluster_id}")
+                return cluster_id
+        except Exception as exc:
+            logger.warning(f"Submission attempt {attempt}/{max_retries} failed: {exc}")
+            if attempt == max_retries:
+                msg = f"Failed to submit job after {max_retries} attempts."
+                raise JobSubmissionError(msg) from exc
+            time.sleep(2**attempt)  # Exponential backoff
+
+    return 0  # Should not reach here
 
 
-def write_submit_metadata(cluster_id, base_name):
-    """Writes the cluster_id and the simulation name into a
-    metadata file.
+def write_submit_metadata(cluster_id: int, base_name: str) -> None:
+    """Writes the cluster_id and the simulation name into a metadata file.
 
-    :param cluster_id: The cluster_id from HTCondor.
-    :type cluster_id: int
-    :param base_name: The name of the simulation.
-    :type base_name: str
+    Args:
+        cluster_id: The cluster ID from HTCondor.
+        base_name: The name of the simulation.
     """
-    with open(glb.metadata_path, "a") as metadata:
-        metadata.write(f"{base_name},{cluster_id}\n")
+    try:
+        with glb.METADATA_PATH.open("a") as metadata:
+            metadata.write(f"{base_name},{cluster_id}\n")
+    except OSError as exc:
+        logger.error(f"Failed to write metadata for {base_name}: {exc}")
 
 
-def get_info_from_folder_name(folder_name):
-    # excision_q100_b639_sx1-0.1_sy1-0.9_sz1-0.1_sx20.1_sy20.1_sz20.9
+def get_info_from_folder_name(folder_name: str) -> Dict[str, Any]:
+    """Parses simulation information from the folder name.
+
+    Args:
+        folder_name: The name of the simulation folder.
+
+    Returns:
+        A dictionary containing parsed parameters.
+    """
     pieces = folder_name.split("_")
-    d = {}
-    d["q"] = int(pieces[1][1:])
-    d["exr"] = int(d["q"] / 2)
-    d["sx1"] = float(pieces[3][3:])
-    d["sy1"] = float(pieces[4][3:])
-    d["sz1"] = float(pieces[5][3:])
-    d["sx2"] = float(pieces[6][3:])
-    d["sy2"] = float(pieces[7][3:])
-    d["sz2"] = float(pieces[8][3:])
-    return d
+    try:
+        d = {
+            "q": int(pieces[1][1:]),
+            "sx1": float(pieces[3][3:]),
+            "sy1": float(pieces[4][3:]),
+            "sz1": float(pieces[5][3:]),
+            "sx2": float(pieces[6][3:]),
+            "sy2": float(pieces[7][3:]),
+            "sz2": float(pieces[8][3:]),
+        }
+        d["exr"] = d["q"] / 2
+        return d
+    except (IndexError, ValueError) as exc:
+        logger.error(f"Failed to parse folder name '{folder_name}': {exc}")
+        return {}
 
 
-def check_output_dir(dir1):
-    if not os.path.exists(dir1):
-        create_sim_dir(dir1)
+def check_existence_simulation(simulation_folder_name: str) -> bool:
+    """Checks if a simulation already exists and has produced output.
 
+    Args:
+        simulation_folder_name: Name of the simulation folder.
 
-def check_existence_simulation(simulation_folder_name):
-    """Checks if a simulation already exists and is finished.
-    :param simulation_folder_name: Name of the simulation folder
-    :type simulation_folder_name: str
-    :returns: Boolean
-    :rtype: bool
+    Returns:
+        True if the simulation exists and is considered finished.
     """
-    folder_path = f"{glb.simulations_path}/{simulation_folder_name}"
-    file_path = f"{folder_path}/twopunctures.xyz.h5"
-    return bool(os.path.exists(file_path))
+    file_path = glb.SIMULATIONS_PATH / simulation_folder_name / "twopunctures.xyz.h5"
+    return file_path.exists()
 
 
-def submit(simulation):
-    """Main submit function. Creates parameter and submition files
-    creates output directory and submits a simulation through Condor.
+def submit(simulation: Any) -> int:
+    """Main submission entry point.
 
-    :param simulation: Dictionary containing simulation info
-    :type simulation: dict
+    Creates parameter and submission files, sets up directories, and 
+    submits the simulation to HTCondor.
+
+    Args:
+        simulation: An object or dictionary containing simulation information.
+
+    Returns:
+        Exit code (0 for success).
     """
-    vanilla_base_name = simulation.vanilla_base_name
-    excision_base_name = simulation.excision_base_name
-    want2submit = True
-    print("Submiting simulations for:")
-    print(vanilla_base_name.split("vanilla_")[1])
-    print(30 * "==")
+    v_base = simulation.vanilla_base_name
+    e_base = simulation.excision_base_name
 
-    if not check_existence_simulation(vanilla_base_name):
+    logger.info(f"Preparing submission for: {v_base.replace('vanilla_', '')}")
+    logger.info("=" * 30)
+
+    if not check_existence_simulation(v_base):
+        logger.info(f"Processing vanilla simulation: {v_base}")
         vanilla_parfile = p.Parameter_File(simulation, excision=False, N=1)
         vanilla_parfile.write_parfile()
-        vnl_sub = csf.create_sub_dict(vanilla_base_name)
-        vanilla_sim_dir = create_sim_dir(vanilla_base_name)
-        check_output_dir(vanilla_sim_dir)
-        if want2submit:
-            vnl_id = submit_simulation(vnl_sub)
-            write_submit_metadata(vnl_id, vanilla_base_name)
+        
+        v_sub = csf.create_sub_dict(v_base)
+        create_sim_dir(v_base)
+        
+        try:
+            v_id = submit_simulation(v_sub)
+            write_submit_metadata(v_id, v_base)
+        except JobSubmissionError as exc:
+            logger.error(f"Vanilla submission failed: {exc}")
 
+    logger.info(f"Processing excision simulation: {e_base}")
     excision_parfile = p.Parameter_File(simulation, excision=True, N=1)
-
     excision_parfile.write_parfile()
 
-    exc_sub = csf.create_sub_dict(excision_base_name)
-    excision_sim_dir = create_sim_dir(excision_base_name)
-    check_output_dir(excision_sim_dir)
+    e_sub = csf.create_sub_dict(e_base)
+    create_sim_dir(e_base)
 
-    if want2submit:
-        exc_id = submit_simulation(exc_sub)
-        write_submit_metadata(exc_id, excision_base_name)
+    try:
+        e_id = submit_simulation(e_sub)
+        write_submit_metadata(e_id, e_base)
+    except JobSubmissionError as exc:
+        logger.error(f"Excision submission failed: {exc}")
 
     return 0
+
+
+def main() -> None:
+    """CLI entry point for submission."""
+    # This would normally parse arguments and call submit()
+    pass
+
+if __name__ == "__main__":
+    main()

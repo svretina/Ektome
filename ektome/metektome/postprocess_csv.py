@@ -18,8 +18,10 @@
 """This module provides functions to post process the csv data."""
 
 import os
+
 import numpy as np
 import pandas as pd
+
 import ektome.globals as glb
 
 data = pd.read_csv(f"{glb.results_path}/error_data3Dpythran_final.csv")
@@ -72,7 +74,7 @@ def seperate_csv_in_q():
 
 
 def exclude_bad_sims(df, filename):
-    with open(filename, "r") as fl:
+    with open(filename) as fl:
         lines = fl.readlines()
 
         for line in lines:

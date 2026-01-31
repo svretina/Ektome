@@ -97,9 +97,7 @@ class Simulation:
         d = self.__dict__
         keys = ["q", "b", "sx1", "sy1", "sz1", "sx2", "sy2", "sz2"]
         for i in keys:
-            if "q" in i:
-                tmp.append(f"_{i}{int(d[i])}")
-            elif "b" in i:
+            if "q" in i or "b" in i:
                 tmp.append(f"_{i}{int(d[i])}")
             else:
                 tmp.append(f"_{i}{d[i]}")

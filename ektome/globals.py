@@ -17,14 +17,19 @@
 
 """This module provides global variables which will be used throughout the package."""
 
-import os
+from pathlib import Path
 
-min_r = 0.5  # Schwarzshild radius for M = 1 in isotropic coords
-proj_path = os.getcwd()
-simulations_path = f"{proj_path}/simulations"
-results_path = f"{proj_path}/results"
-figures_path = f"{proj_path}/results/figures"
-parfiles_path = f"{proj_path}/parfiles"
-subfiles_path = f"{proj_path}/subfiles"
-metadata_path = f"{proj_path}/metadata.txt"
-config_path = f"{proj_path}/submit.ini"
+# Schwarzshild radius for M = 1 in isotropic coords
+MIN_R: float = 0.5
+
+# Base project path
+PROJECT_PATH: Path = Path.cwd()
+
+# Derived paths using pathlib
+SIMULATIONS_PATH: Path = PROJECT_PATH / "simulations"
+RESULTS_PATH: Path = PROJECT_PATH / "results"
+FIGURES_PATH: Path = RESULTS_PATH / "figures"
+PARFILES_PATH: Path = PROJECT_PATH / "parfiles"
+SUBFILES_PATH: Path = PROJECT_PATH / "subfiles"
+METADATA_PATH: Path = PROJECT_PATH / "metadata.txt"
+CONFIG_PATH: Path = PROJECT_PATH / "submit.ini"

@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-import os
-import sys
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import ektome.globals as glb
 import tikzplotlib as tikz
+
+import ektome.globals as glb
 
 fig_width_pt = 510.0  # Get this from LaTeX using \showthe\columnwidth
 inches_per_pt = 1.0 / 72.27  # Convert pt to inch

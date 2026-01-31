@@ -1,180 +1,138 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2021 Stamatis Vretinaris
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, see <https://www.gnu.org/licenses/>.
+
+"""This module provides functions to calculate errors between simulations."""
+
+import logging
+
 import numpy as np
-import numpy.ma as ma
 import pandas as pd
-import matplotlib.pyplot as plt
-import bottleneck as bn
 
 import ektome.metektome.simulation as sim
-import ektome.metektome.cython_funcs as cf
-import ektome.metektome.search3D as s
+from ektome.exceptions import SimulationNotFoundError
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class Error:
-    def __init__(self, vnl_sim_name, dim=2):
-        self.sim_name1 = vnl_sim_name
-        self.sim_name2 = f"excision{vnl_sim_name.split('vanilla')[1]}"
+    """Calculates and reports errors between a vanilla and an excision simulation.
+
+    Attributes:
+        vnl_sim_name: Name of the vanilla simulation.
+        exc_sim_name: Name of the corresponding excision simulation.
+        dim: Dimensionality of the data.
+    """
+
+    def __init__(self, vnl_sim_name: str, dim: int = 3) -> None:
+        """Initializes the Error object by loading both simulations.
+
+        Args:
+            vnl_sim_name: Name of the vanilla simulation folder.
+            dim: Dimension of the data.
+
+        Raises:
+            SimulationNotFoundError: If either simulation cannot be loaded.
+        """
+        self.vnl_sim_name = vnl_sim_name
+        # Assuming naming convention: vanilla_... -> excision_...
+        suffix = vnl_sim_name.split("vanilla")[-1]
+        self.exc_sim_name = f"excision{suffix}"
         self.dim = dim
-        self.error_u = None
-        self.error_psi = None
+
         try:
-            self.vanilla = sim.Simulation(self.sim_name1, self.dim)
-            self.excision = sim.Simulation(self.sim_name2, self.dim)
-        except:
-            print("File not found")
-            raise FileNotFoundError("File not found")
+            self.vanilla = sim.Simulation(self.vnl_sim_name, self.dim)
+            self.excision = sim.Simulation(self.exc_sim_name, self.dim)
+        except SimulationNotFoundError as exc:
+            logger.error(f"Could not load simulations for error comparison: {exc}")
+            raise
 
         self.q = self.vanilla.mp / self.vanilla.mm
-        # self._calculate_error_u()
+        self.ex_r = self.excision.ex_r
+        self.par_b = self.vanilla.par_b
+
         self._calculate_error_psi()
         self._calculate_error_psi_theoretical()
 
-        self.ex_r = self.excision.ex_r
-        self.par_b = self.vanilla.par_b
-        self.psimax = self.calculate_max_with_mask3D(self.error_psi)
-        self.psimaxt = self.calculate_max_with_mask3D(self.error_psi_t)
-        # self.umax = self.calculate_max_with_mask(self.error_u)
+        self.psimax = self.calculate_max_with_mask(self.error_psi)
+        self.psimaxt = self.calculate_max_with_mask(self.error_psi_t)
 
-    def _circle(self, x, y):
-        return (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y
+    def _calculate_error_psi(self) -> None:
+        """Calculates the relative error in the psi field."""
+        self.error_psi = abs(self.vanilla.psi - self.excision.psi) / self.vanilla.psi
 
-    def _sphere(self, x, y, z):
-        return (
-            (x + self.vanilla.par_b) * (x + self.vanilla.par_b) + y * y + z * z
-        )
-
-    def _calculate_error_u(self):
-        if (self.vanilla.s1 == 0) & (self.vanilla.s2 == 0):
-            self.error_u = self.excision.u
-        else:
-            self.error_u = (
-                abs(self.vanilla.u - self.excision.u) / self.vanilla.u
-            )
-
-    def _calculate_error_psi(self):
-        self.error_psi = (
-            abs(self.vanilla.psi - self.excision.psi) / self.vanilla.psi
-        )
-
-    def _calculate_error_psi_theoretical(self):
+    def _calculate_error_psi_theoretical(self) -> None:
+        """Calculates a theoretical error estimate for the psi field."""
         temp = self.q / (4.0 * self.vanilla.par_b - self.q)
         self.error_psi_t = temp / self.vanilla.psi
 
-    def _calculate_error_norm_with_mask(self):
-        for _ref_level, _comp_index, unif_grid in self.error_psi:
-            x, y = unif_grid.coordinates_from_grid()
-            mask = np.ones(unif_grid.data.shape)
-            for j in range(y.shape[0]):
-                for i in range(x.shape[0]):
-                    if x[i] > 0:
-                        mask[i, j] = np.nan
-                        continue
-                    if self._circle(x[i], y[j]) < (self.ex_r ** 2):
-                        mask[i, j] = np.nan
-            data = mask * unif_grid.data
-            data = data[~np.isnan(data)]
-            data = data.reshape(-1)
-            norm = np.linalg.norm(data) / np.sqrt(len(data))
-        return norm
+    def calculate_max_with_mask(self, var) -> float:
+        """Calculates the maximum value of a field within a masked region.
 
-    def _sphere(self, x, y, z):
-        return (x + self.par_b) * (x + self.par_b) + y * y + z * z
+        The mask excludes the region inside the excision radius.
 
-    def calculate_max_with_mask3D(self, var):
-        maxs = []
+        Args:
+            var: The field data (typically from kuibit).
+
+        Returns:
+            The maximum value found.
+        """
+        max_vals = []
         for _ref_level, _comp_index, unif_grid in var:
-            x, y, z = unif_grid.coordinates_from_grid()
-            dx = unif_grid.dx
-            ybounds = [-self.ex_r - dx[1], self.ex_r + dx[1]]
-            zbounds = [-self.ex_r - dx[2], self.ex_r + dx[2]]
-            xbounds = [
-                -self.par_b - self.ex_r - dx[0],
-                -self.par_b + self.ex_r + dx[0],
-            ]
-            # mask = np.ones(unif_grid.data.shape)*np.nan
-            # print(unif_grid.data.shape)
-            mask = s.loop(
-                self.par_b,
-                self.ex_r,
-                x,
-                y,
-                z,
-                xbounds,
-                ybounds,
-                zbounds,
-                unif_grid.data.shape,
-            )
-            # mask = np.asarray(mask)
-            data = mask * unif_grid.data
-            if not bn.allnan(data):
-                maxs.append(bn.nanmax(data))
-        return bn.nanmax(maxs)
+            coords = unif_grid.coordinates_from_grid()
+            data = unif_grid.data
+            
+            # Create mask: True where we WANT to keep data
+            if self.dim == 3:
+                x, y, z = coords
+                # Distance from puncture at (-par_b, 0, 0)
+                dist_sq = (x + self.par_b)**2 + y**2 + z**2
+            else:
+                x, y = coords
+                dist_sq = (x + self.par_b)**2 + y**2
 
-    def calculate_max_with_mask(self, var):
-        maxs = []
-        for _ref_level, _comp_index, unif_grid in var:
-            if self.vanilla.dim == 2:
-                x, y = unif_grid.coordinates_from_grid()
-                dx, dy = unif_grid.dx
-                ybounds = [-self.ex_r - dy, self.ex_r + dy]
-                xbounds = [
-                    -self.par_b - self.ex_r - dx,
-                    -self.par_b + self.ex_r + dx,
-                ]
-                mask = np.ones(unif_grid.data.shape) * np.nan
-                for j in range(y.shape[0]):
-                    if y[j] < ybounds[0] or y[j] > ybounds[1]:
-                        continue
-                    for i in range(x.shape[0]):
-                        if x[i] < xbounds[0] or x[i] > xbounds[1]:
-                            continue
-                        if self.dim == 2 and self._circle(x[i], y[j]) >= (
-                            self.ex_r ** 2
-                        ):
-                            mask[i, j] = 1
+            mask = dist_sq >= (self.ex_r**2)
+            
+            # Apply mask to data
+            masked_data = data[mask]
+            
+            if masked_data.size > 0:
+                max_vals.append(np.nanmax(masked_data))
 
-            elif self.vanilla.dim == 3:
-                x, y, z = unif_grid.coordinates_from_grid()
-                dx = unif_grid.dx
+        if not max_vals:
+            logger.warning(f"No valid data points found after masking for {self.vnl_sim_name}")
+            return 0.0
 
-                ybounds = [-self.ex_r - dx[1], self.ex_r + dx[1]]
-                zbounds = [-self.ex_r - dx[2], self.ex_r + dx[2]]
-                xbounds = [
-                    -self.par_b - self.ex_r - dx[0],
-                    -self.par_b + self.ex_r + dx[0],
-                ]
-                mask = np.ones(unif_grid.data.shape) * np.nan
-                for j in range(y.shape[0]):
-                    if y[j] < ybounds[0] or y[j] > ybounds[1]:
-                        continue
-                    for i in range(x.shape[0]):
-                        if x[i] < xbounds[0] or x[i] > xbounds[1]:
-                            continue
-                        for k in range(z.shape[0]):
-                            if z[k] < zbounds[0] or z[k] > zbounds[1]:
-                                continue
-                            if self._sphere(x[i], y[j], z[k]) >= (
-                                self.ex_r ** 2
-                            ):
-                                mask[i, j, k] = 1
+        return float(np.max(max_vals))
 
-            data = mask * unif_grid.data
-            if not bn.allnan(data):
-                maxs.append(bn.nanmax(data))
-        return bn.nanmax(maxs)
+    def error_report(self) -> pd.DataFrame:
+        """Generates a summary report of the errors and simulation parameters.
 
-    def error_report(self):
-        error_dict = {
+        Returns:
+            A pandas DataFrame with one row of summary data.
+        """
+        report = {
             "q": self.q,
-            "b": self.vanilla.par_b,
+            "b": self.par_b,
             "ex_r": self.ex_r,
-            # 1st BH
             "s1x": self.vanilla.s1x,
             "s1y": self.vanilla.s1y,
             "s1z": self.vanilla.s1z,
             "s1": self.vanilla.s1,
-            # 2nd BH
             "s2x": self.vanilla.s2x,
             "s2y": self.vanilla.s2y,
             "s2z": self.vanilla.s2z,
@@ -182,4 +140,4 @@ class Error:
             "max_error_psi": self.psimax,
             "max_error_psi_theoretical": self.psimaxt,
         }
-        return pd.DataFrame.from_dict([error_dict])
+        return pd.DataFrame([report])
