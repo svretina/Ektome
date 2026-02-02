@@ -23,3 +23,7 @@ class PostProcessingError(EktomeError):
 class SimulationNotFoundError(PostProcessingError):
     """Raised when a specified simulation directory or file is not found."""
     pass
+
+class ConfigurationError(EktomeError):
+    """Raised when there is an error in the configuration file or its parsing."""
+    pass

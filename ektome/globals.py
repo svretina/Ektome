@@ -17,13 +17,14 @@
 
 """This module provides global variables which will be used throughout the package."""
 
+import os
 from pathlib import Path
 
 # Schwarzshild radius for M = 1 in isotropic coords
 MIN_R: float = 0.5
 
-# Base project path
-PROJECT_PATH: Path = Path.cwd()
+# Base project path - allow override via Environment Variable
+PROJECT_PATH: Path = Path(os.getenv("EKTOME_PROJECT_PATH", Path.cwd())).resolve()
 
 # Derived paths using pathlib
 SIMULATIONS_PATH: Path = PROJECT_PATH / "simulations"
@@ -33,3 +34,15 @@ PARFILES_PATH: Path = PROJECT_PATH / "parfiles"
 SUBFILES_PATH: Path = PROJECT_PATH / "subfiles"
 METADATA_PATH: Path = PROJECT_PATH / "metadata.txt"
 CONFIG_PATH: Path = PROJECT_PATH / "submit.ini"
+
+# Ensure essential directories exist (this will be used by spine.py)
+REQUIRED_DIRECTORIES = [
+    SIMULATIONS_PATH,
+    RESULTS_PATH,
+    FIGURES_PATH,
+    FIGURES_PATH / "u",
+    FIGURES_PATH / "psi",
+    FIGURES_PATH / "error",
+    PARFILES_PATH,
+    SUBFILES_PATH,
+]
